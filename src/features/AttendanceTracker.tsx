@@ -3,7 +3,8 @@ import { useJournal } from '../context/JournalContext';
 import type { AttendanceStatus, Weather, Atmosphere, DailyRecord } from '../types';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Sun, Cloud, CloudRain, Snowflake, Wind, Smile, Zap, Meh, Moon } from 'lucide-react';
+import { Sun, Cloud, CloudRain, Snowflake, Wind, Smile, Zap, Meh, Moon, UserPlus } from 'lucide-react';
+import { StudentManagerModal } from './StudentManagerModal';
 
 const WEATHER_OPTIONS: { value: Weather; icon: any; label: string }[] = [
   { value: 'Sunny', icon: Sun, label: '맑음' },
@@ -28,8 +29,9 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
 };
 
 export const AttendanceTracker: React.FC = () => {
-  const { currentDate, setCurrentDate, students, records, saveCurrentRecord } = useJournal();
+  const { currentDate, students, records, saveCurrentRecord } = useJournal();
   const [record, setRecord] = useState<DailyRecord | null>(null);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   useEffect(() => {
     const existing = records.find(r => r.date === currentDate);
@@ -65,20 +67,10 @@ export const AttendanceTracker: React.FC = () => {
   if (!record) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <Card>
-        <CardHeader title="오늘의 정보" subtitle="날짜, 날씨, 교실 분위기를 기록하세요" />
+        <CardHeader title="오늘의 정보" subtitle="날씨와 교실 분위기를 기록하세요" />
         <CardContent className="flex flex-wrap gap-8">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">날짜</label>
-            <input 
-              type="date" 
-              value={currentDate}
-              onChange={(e) => setCurrentDate(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-            />
-          </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">날씨</label>
             <div className="flex gap-2">
@@ -144,6 +136,23 @@ export const AttendanceTracker: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Floating Action Button for Student Management */}
+      <div className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-40">
+        <button
+          onClick={() => setIsStudentModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg flex items-center gap-2 transition-all hover:scale-105"
+          title="학생 관리"
+        >
+          <UserPlus size={24} />
+          <span className="font-medium hidden md:inline">학생 관리</span>
+        </button>
+      </div>
+
+      <StudentManagerModal 
+        isOpen={isStudentModalOpen} 
+        onClose={() => setIsStudentModalOpen(false)} 
+      />
     </div>
   );
 };

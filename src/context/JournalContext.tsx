@@ -11,6 +11,7 @@ interface JournalContextType {
   todos: TodoItem[];
   saveCurrentRecord: (record: DailyRecord) => void;
   updateTodos: (todos: TodoItem[]) => void;
+  manageStudents: (newStudents: Student[]) => void;
 }
 
 const JournalContext = createContext<JournalContextType | undefined>(undefined);
@@ -45,6 +46,11 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTodos(newTodos);
   };
 
+  const manageStudents = (newStudents: Student[]) => {
+    localStorageService.saveStudents(newStudents);
+    setStudents(newStudents);
+  };
+
   return (
     <JournalContext.Provider value={{
       currentDate,
@@ -54,6 +60,7 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
       todos,
       saveCurrentRecord,
       updateTodos,
+      manageStudents,
     }}>
       {children}
     </JournalContext.Provider>

@@ -5,8 +5,11 @@ import { Plus, CheckCircle, Circle, Trash2 } from 'lucide-react';
 import type { TodoItem } from '../types';
 
 export const TodoListManager: React.FC = () => {
-  const { todos, updateTodos } = useJournal();
+  const { todos, updateTodos, currentDate } = useJournal();
   const [newTodo, setNewTodo] = useState('');
+
+  // Filter todos for the selected date
+  const filteredTodos = todos.filter(todo => todo.dueDate === currentDate);
 
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +19,7 @@ export const TodoListManager: React.FC = () => {
       id: Date.now().toString(),
       content: newTodo,
       completed: false,
-      dueDate: new Date().toISOString().split('T')[0]
+      dueDate: currentDate // Use selected date
     };
 
     updateTodos([...todos, todo]);
@@ -37,7 +40,7 @@ export const TodoListManager: React.FC = () => {
 
   return (
     <Card className="h-full">
-      <CardHeader title="할 일 목록" subtitle="오늘의 업무를 관리하세요" />
+      <CardHeader title="할 일 목록" subtitle={`${currentDate} 업무를 관리하세요`} />
       <CardContent>
         <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
           <input
@@ -56,10 +59,10 @@ export const TodoListManager: React.FC = () => {
         </form>
 
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          {todos.length === 0 ? (
-            <p className="text-center text-gray-400 py-4 text-sm">할 일이 없습니다.</p>
+          {filteredTodos.length === 0 ? (
+            <p className="text-center text-gray-400 py-4 text-sm">등록된 할 일이 없습니다.</p>
           ) : (
-            todos.map((todo) => (
+            filteredTodos.map((todo) => (
               <div 
                 key={todo.id} 
                 className={`flex items-center justify-between p-3 rounded-lg border ${

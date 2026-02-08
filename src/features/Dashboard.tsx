@@ -12,20 +12,34 @@ const COLORS = {
 };
 
 export const Dashboard: React.FC = () => {
-  const { records, students } = useJournal();
+  const { records, students, currentDate } = useJournal();
 
-  // Latest attendance data
-  const latestRecord = records.length > 0 ? records[records.length - 1] : null;
+  // Find record for current date
+  const currentRecord = records.find(r => r.date === currentDate);
   
-  const attendanceData = latestRecord ? [
-    { name: '출석', value: latestRecord.attendance.filter(a => a.status === 'Present').length, color: COLORS.Present },
-    { name: '결석', value: latestRecord.attendance.filter(a => a.status === 'Absent').length, color: COLORS.Absent },
-    { name: '지각', value: latestRecord.attendance.filter(a => a.status === 'Late').length, color: COLORS.Late },
-    { name: '조퇴', value: latestRecord.attendance.filter(a => a.status === 'Early Leave').length, color: COLORS['Early Leave'] },
+  const attendanceData = currentRecord ? [
+    { name: '출석', value: currentRecord.attendance.filter(a => a.status === 'Present').length, color: COLORS.Present },
+    { name: '결석', value: currentRecord.attendance.filter(a => a.status === 'Absent').length, color: COLORS.Absent },
+    { name: '지각', value: currentRecord.attendance.filter(a => a.status === 'Late').length, color: COLORS.Late },
+    { name: '조퇴', value: currentRecord.attendance.filter(a => a.status === 'Early Leave').length, color: COLORS['Early Leave'] },
   ].filter(d => d.value > 0) : [];
 
-  // Weekly attendance trend (mocking or using real data if enough)
-  const last7Days = records.slice(-7).map(r => ({
+  // Weekly attendance trend (up to current date, max 7 days)
+  const sortedRecords = [...records].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const currentIndex = sortedRecords.findIndex(r => r.date === currentDate);
+  
+  // If current date exists, take up to 7 records ending at current date
+  // If not, take up to 7 records ending at the last available date before current date
+  let last7DaysRecords = [];
+  
+  if (currentIndex !== -1) {
+    last7DaysRecords = sortedRecords.slice(Math.max(0, currentIndex - 6), currentIndex + 1);
+  } else {
+     const pastRecords = sortedRecords.filter(r => new Date(r.date) <= new Date(currentDate));
+     last7DaysRecords = pastRecords.slice(-7);
+  }
+
+  const last7Days = last7DaysRecords.map(r => ({
     date: r.date.slice(5), // MM-DD
     present: r.attendance.filter(a => a.status === 'Present').length,
   }));
@@ -34,7 +48,7 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
-          <CardHeader title="오늘의 출결 현황" subtitle={latestRecord ? `${latestRecord.date} 기준` : '데이터 없음'} />
+          <CardHeader title="오늘의 출결 현황" subtitle={currentDate} />
           <CardContent className="h-64">
             {attendanceData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -65,7 +79,7 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         <Card>
-          <CardHeader title="최근 출석 인원 추이" subtitle="최근 7회 기록" />
+          <CardHeader title="최근 출석 인원 추이" subtitle="선택 날짜 기준 최근 7회" />
           <CardContent className="h-64">
             {last7Days.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
