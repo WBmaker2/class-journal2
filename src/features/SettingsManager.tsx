@@ -1,0 +1,214 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Eye, EyeOff, Save, Lock, HelpCircle, ExternalLink, LogIn, LogOut, CloudUpload, CloudDownload, RefreshCw } from 'lucide-react';
+import { useGoogleDrive } from '../hooks/useGoogleDrive';
+
+const STORAGE_KEY = 'cj_google_config';
+
+// Simple obfuscation/encryption for local storage (Client-side only)
+const encrypt = (text: string) => {
+  if (!text) return '';
+  try {
+    return btoa(text.split('').map((char, index) => 
+      String.fromCharCode(char.charCodeAt(0) ^ (index % 255))
+    ).join(''));
+  } catch (e) {
+    console.error('Encryption failed', e);
+    return text;
+  }
+};
+
+const decrypt = (encrypted: string) => {
+  if (!encrypted) return '';
+  try {
+    return atob(encrypted).split('').map((char, index) => 
+      String.fromCharCode(char.charCodeAt(0) ^ (index % 255))
+    ).join('');
+  } catch (e) {
+    console.error('Decryption failed', e);
+    return '';
+  }
+};
+
+export const SettingsManager: React.FC = () => {
+  const [clientId, setClientId] = useState('');
+  const [showSecrets, setShowSecrets] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const { 
+    isLoggedIn, 
+    isSyncing, 
+    lastSync, 
+    error, 
+    handleLogin, 
+    handleLogout, 
+    uploadData, 
+    downloadData 
+  } = useGoogleDrive();
+
+  useEffect(() => {
+    const savedConfig = localStorage.getItem(STORAGE_KEY);
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        setClientId(decrypt(parsed.clientId));
+      } catch (e) {
+        console.error('Failed to load settings', e);
+      }
+    }
+  }, []);
+
+  const handleSave = () => {
+    const config = {
+      clientId: encrypt(clientId),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const onLogin = async () => {
+    if (!clientId) {
+      alert('Client ID를 먼저 입력하고 저장해주세요.');
+      return;
+    }
+    try {
+      await handleLogin(clientId);
+    } catch (err) {
+      alert('로그인에 실패했습니다. API 설정을 확인해주세요.');
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader 
+          title="Google Drive 연동 설정" 
+          subtitle="학급 일지 데이터를 Google Drive에 백업하기 위해 Client ID를 입력해주세요." 
+        />
+        <CardContent className="space-y-6">
+          {/* Guide Section */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 space-y-3">
+            <h3 className="font-semibold text-blue-800 flex items-center gap-2">
+              <HelpCircle size={18} />
+              구글 로그인 설정 가이드 (필독!)
+            </h3>
+            <div className="text-sm text-blue-700 space-y-2">
+              <p>
+                <strong>로그인 실패 시 99%는 '승인된 자바스크립트 원본' 설정 문제입니다.</strong>
+              </p>
+              <ol className="list-decimal list-inside ml-1 space-y-1">
+                <li>
+                  <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="underline font-medium hover:text-blue-900 inline-flex items-center gap-1">
+                    Google Cloud Console <ExternalLink size={12} />
+                  </a>에 접속합니다.
+                </li>
+                <li>[API 및 서비스] &gt; [사용자 인증 정보]로 이동합니다.</li>
+                <li>생성한 <strong>OAuth 2.0 클라이언트 ID</strong>를 클릭하여 수정 화면으로 들어갑니다.</li>
+                <li>
+                  <strong>승인된 자바스크립트 원본</strong> 항목에 아래 주소를 <strong>반드시 추가</strong>하세요:
+                  <br />
+                  <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">http://localhost:5173</code>
+                  <span className="text-xs text-blue-600">(마지막에 '/'가 없어야 합니다)</span>
+                </li>
+                <li>저장 후 <strong>Client ID</strong>를 복사하여 아래에 입력하세요.</li>
+              </ol>
+            </div>
+          </div>
+
+          {/* Input Section */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Client ID</label>
+              <div className="relative">
+                <input
+                  type={showSecrets ? "text" : "password"}
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  placeholder="Example: 123456789-abcdef.apps.googleusercontent.com"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecrets(!showSecrets)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showSecrets ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-4">
+              <Button onClick={handleSave} className="flex-1 md:flex-none flex items-center gap-2">
+                {isSaved ? <Lock size={16} /> : <Save size={16} />}
+                {isSaved ? '저장되었습니다' : '설정 저장하기'}
+              </Button>
+              
+              {!isLoggedIn ? (
+                <Button onClick={onLogin} variant="outline" className="flex-1 md:flex-none flex items-center gap-2">
+                  <LogIn size={16} />
+                  Google 로그인
+                </Button>
+              ) : (
+                <Button onClick={handleLogout} variant="ghost" className="flex-1 md:flex-none flex items-center gap-2 text-red-500">
+                  <LogOut size={16} />
+                  로그아웃
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sync Status Section */}
+      <Card>
+        <CardHeader title="데이터 동기화" />
+        <CardContent>
+          {!isLoggedIn ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>동기화를 위해 먼저 Google 계정으로 로그인해 주세요.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-900">최근 동기화</p>
+                  <p className="text-xs text-gray-500">{lastSync || '기록 없음'}</p>
+                </div>
+                {isSyncing && <RefreshCw size={20} className="text-blue-500 animate-spin" />}
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-100 rounded-md text-sm text-red-600">
+                  {error}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={uploadData} 
+                  disabled={isSyncing}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <CloudUpload size={18} />
+                  데이터 올리기 (백업)
+                </Button>
+                <Button 
+                  onClick={downloadData} 
+                  variant="outline" 
+                  disabled={isSyncing}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <CloudDownload size={18} />
+                  데이터 내려받기 (복구)
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
