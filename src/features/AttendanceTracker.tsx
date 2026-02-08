@@ -36,7 +36,22 @@ export const AttendanceTracker: React.FC = () => {
   useEffect(() => {
     const existing = records.find(r => r.date === currentDate);
     if (existing) {
-      setRecord(existing);
+      // Check if any current students are missing from the record
+      const existingStudentIds = new Set(existing.attendance.map(a => a.studentId));
+      const missingStudents = students.filter(s => !existingStudentIds.has(s.id));
+
+      if (missingStudents.length > 0) {
+        // Add missing students with default 'Present' status
+        const newAttendance = [
+          ...existing.attendance,
+          ...missingStudents.map(s => ({ studentId: s.id, status: 'Present' as AttendanceStatus }))
+        ];
+        const updatedRecord = { ...existing, attendance: newAttendance };
+        setRecord(updatedRecord);
+        saveCurrentRecord(updatedRecord); // Sync to storage/context immediately
+      } else {
+        setRecord(existing);
+      }
     } else {
       setRecord({
         date: currentDate,
@@ -47,7 +62,7 @@ export const AttendanceTracker: React.FC = () => {
         classLog: '',
       });
     }
-  }, [currentDate, records, students]);
+  }, [currentDate, records, students, saveCurrentRecord]);
 
   const updateRecord = (updates: Partial<DailyRecord>) => {
     if (!record) return;
@@ -58,9 +73,19 @@ export const AttendanceTracker: React.FC = () => {
 
   const updateAttendance = (studentId: string, status: AttendanceStatus) => {
     if (!record) return;
-    const newAttendance = record.attendance.map(a => 
-      a.studentId === studentId ? { ...a, status } : a
-    );
+    
+    const exists = record.attendance.some(a => a.studentId === studentId);
+    let newAttendance;
+
+    if (exists) {
+      newAttendance = record.attendance.map(a => 
+        a.studentId === studentId ? { ...a, status } : a
+      );
+    } else {
+      // Handle case where student is not yet in attendance record
+      newAttendance = [...record.attendance, { studentId, status }];
+    }
+
     updateRecord({ attendance: newAttendance });
   };
 
