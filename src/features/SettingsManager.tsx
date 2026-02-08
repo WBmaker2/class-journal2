@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Eye, EyeOff, Save, Lock, HelpCircle, ExternalLink, LogIn, LogOut, CloudUpload, CloudDownload, RefreshCw } from 'lucide-react';
+import { Eye, EyeOff, Save, Lock, HelpCircle, ExternalLink, LogIn, LogOut, CloudUpload, CloudDownload, RefreshCw, FileDown, FileUp } from 'lucide-react';
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
+import { localStorageService } from '../services/localStorage';
+import { useToast } from '../context/ToastContext';
 
 const STORAGE_KEY = 'cj_google_config';
 
@@ -35,12 +37,15 @@ export const SettingsManager: React.FC = () => {
   const [clientId, setClientId] = useState('');
   const [showSecrets, setShowSecrets] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const { showToast } = useToast();
 
   const { 
     isLoggedIn, 
     isSyncing, 
     lastSync, 
     error, 
+    autoSync,
+    setAutoSync,
     handleLogin, 
     handleLogout, 
     uploadData, 
@@ -65,20 +70,73 @@ export const SettingsManager: React.FC = () => {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     setIsSaved(true);
+    showToast('설정이 저장되었습니다.', 'success');
     setTimeout(() => setIsSaved(false), 2000);
   };
 
   const onLogin = async () => {
     if (!clientId) {
-      alert('Client ID를 먼저 입력하고 저장해주세요.');
+      showToast('Client ID를 먼저 입력하고 저장해주세요.', 'error');
       return;
     }
     try {
       await handleLogin(clientId);
     } catch (err) {
-      alert('로그인에 실패했습니다. API 설정을 확인해주세요.');
+      showToast('로그인에 실패했습니다. API 설정을 확인해주세요.', 'error');
       console.error(err);
     }
+  };
+
+  const handleExportJson = () => {
+    const data = {
+      records: localStorageService.getAllRecords(),
+      students: localStorageService.getStudents(),
+      todos: localStorageService.getTodos(),
+      exportedAt: new Date().toISOString(),
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `class_journal_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('백업 파일이 생성되었습니다.', 'success');
+  };
+
+  const handleImportJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (data.records && Array.isArray(data.records)) {
+            localStorage.setItem('cj_daily_records', JSON.stringify(data.records));
+        }
+        if (data.students && Array.isArray(data.students)) {
+            localStorage.setItem('cj_students', JSON.stringify(data.students));
+        }
+        if (data.todos && Array.isArray(data.todos)) {
+            localStorage.setItem('cj_todos', JSON.stringify(data.todos));
+        }
+
+        showToast('데이터가 성공적으로 복구되었습니다.', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (err) {
+        console.error('Failed to parse backup file', err);
+        showToast('백업 파일 형식이 올바르지 않습니다.', 'error');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    event.target.value = '';
   };
 
   return (
@@ -164,7 +222,7 @@ export const SettingsManager: React.FC = () => {
 
       {/* Sync Status Section */}
       <Card>
-        <CardHeader title="데이터 동기화" />
+        <CardHeader title="데이터 동기화 (Google Drive)" subtitle="클라우드에 안전하게 백업합니다." />
         <CardContent>
           {!isLoggedIn ? (
             <div className="text-center py-8 text-gray-500">
@@ -172,6 +230,30 @@ export const SettingsManager: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Auto Sync Toggle */}
+              <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-gray-900">자동 동기화</p>
+                    {autoSync ? (
+                      <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700 font-medium">켜짐</span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-500 font-medium">꺼짐</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">데이터 변경 시 30초 후 자동으로 백업합니다.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={autoSync} 
+                    onChange={(e) => setAutoSync(e.target.checked)} 
+                    className="sr-only peer" 
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-900">최근 동기화</p>
@@ -188,7 +270,7 @@ export const SettingsManager: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button 
-                  onClick={uploadData} 
+                  onClick={() => uploadData(false)} 
                   disabled={isSyncing}
                   className="flex items-center justify-center gap-2"
                 >
@@ -207,6 +289,41 @@ export const SettingsManager: React.FC = () => {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Local Backup Section */}
+      <Card>
+        <CardHeader title="PC 로컬 백업/복구" subtitle="인터넷 연결 없이 파일로 데이터를 저장합니다." />
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button 
+              onClick={handleExportJson} 
+              variant="outline"
+              className="flex items-center justify-center gap-2 border-green-600 text-green-700 hover:bg-green-50"
+            >
+              <FileDown size={18} />
+              PC로 백업 (JSON 내보내기)
+            </Button>
+            <div className="relative">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportJson}
+                className="hidden"
+                id="json-upload"
+              />
+              <label htmlFor="json-upload">
+                <div className="flex items-center justify-center gap-2 cursor-pointer h-10 px-4 py-2 rounded-md border border-orange-200 text-orange-700 font-medium hover:bg-orange-50 transition-colors">
+                  <FileUp size={18} />
+                  PC에서 복구 (JSON 가져오기)
+                </div>
+              </label>
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-gray-400">
+            * 브라우저 캐시 삭제 시 데이터가 사라지는 것을 방지하기 위해 주기적으로 백업 파일을 다운로드해두세요.
+          </p>
         </CardContent>
       </Card>
     </div>

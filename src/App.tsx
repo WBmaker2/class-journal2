@@ -6,6 +6,7 @@ import { TimetableManager } from './features/TimetableManager'
 import { Dashboard } from './features/Dashboard'
 import { SettingsManager } from './features/SettingsManager'
 import { useJournal } from './context/JournalContext'
+import { SyncStatusIndicator } from './components/SyncStatusIndicator'
 
 type Tab = 'dashboard' | 'attendance' | 'timetable' | 'logs' | 'settings';
 
@@ -30,6 +31,9 @@ function App() {
             <BookOpen size={24} />
             학급 일지
           </h1>
+          <div className="mt-2">
+            <SyncStatusIndicator />
+          </div>
         </div>
         
         {/* Global Date Picker (Desktop) */}
@@ -75,6 +79,7 @@ function App() {
                <BookOpen size={24} />
                학급 일지
              </h1>
+             <SyncStatusIndicator />
            </div>
            
            {/* Global Date Picker (Mobile) */}
