@@ -70,5 +70,63 @@ export const usePDFExport = () => {
     }
   };
 
-  return { exportToPDF };
+  const exportBatchToPDF = async ({ elementIds, filename }: { elementIds: string[]; filename: string }): Promise<void> => {
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - (margin * 2);
+      
+      let currentY = margin;
+
+      for (let i = 0; i < elementIds.length; i++) {
+        const id = elementIds[i];
+        const element = document.getElementById(id);
+        if (!element) continue;
+
+        // Temporarily adjust styles for capture
+        const originalPosition = element.style.position;
+        const originalLeft = element.style.left;
+        const originalTop = element.style.top;
+        const originalZIndex = element.style.zIndex;
+
+        element.style.position = 'fixed';
+        element.style.left = '0';
+        element.style.top = '0';
+        element.style.zIndex = '-9999';
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        // Restore styles
+        element.style.position = originalPosition;
+        element.style.left = originalLeft;
+        element.style.top = originalTop;
+        element.style.zIndex = originalZIndex;
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+        // Check if we need a new page
+        if (currentY + imgHeight > pageHeight - margin) {
+          pdf.addPage();
+          currentY = margin;
+        }
+
+        pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+        currentY += imgHeight + 5; // Add small spacing between logs
+      }
+
+      pdf.save(`${filename}.pdf`);
+    } catch (error) {
+      console.error('Error generating batch PDF:', error);
+    }
+  };
+
+  return { exportToPDF, exportBatchToPDF };
 };
