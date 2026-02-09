@@ -169,7 +169,7 @@ export const StudentCumulativeRecord: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {summary.entries.map((entry, index) => (
+                  {summary.entries.map((entry) => (
                     <div key={`${summary.student.id}-${entry.date}`} className="flex gap-4">
                       <div className="w-24 shrink-0 text-sm font-bold text-gray-500 pt-1">
                         {entry.date}
