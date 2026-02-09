@@ -3,7 +3,7 @@ import { useJournal } from '../context/JournalContext';
 import type { AttendanceStatus, Weather, Atmosphere, DailyRecord } from '../types';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Sun, Cloud, CloudRain, Snowflake, Wind, Smile, Zap, Meh, Moon, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { StudentManagerModal } from './StudentManagerModal';
 
 const WEATHER_OPTIONS: { value: Weather; emoji: string; label: string }[] = [
