@@ -29,7 +29,7 @@ function App() {
         <div className="mb-8 px-2">
           <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
             <BookOpen size={24} />
-            학급 일지
+            우리 반 학급 일지
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
@@ -77,7 +77,7 @@ function App() {
            <div className="flex items-center justify-between">
              <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
                <BookOpen size={24} />
-               학급 일지
+               우리 반 학급 일지
              </h1>
              <SyncStatusIndicator />
            </div>

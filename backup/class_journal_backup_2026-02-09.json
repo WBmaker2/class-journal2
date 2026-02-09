@@ -139,7 +139,7 @@
     {
       "date": "2026-02-09",
       "weather": "Sunny",
-      "atmosphere": "Calm",
+      "atmosphere": "Passionate",
       "attendance": [
         {
           "studentId": "1",
@@ -167,42 +167,42 @@
         },
         {
           "studentId": "1770554814926",
-          "status": "Present"
+          "status": "Late"
         }
       ],
       "lessonLogs": [
         {
           "period": 1,
           "subject": "",
-          "content": "81"
+          "content": "981"
         },
         {
           "period": 2,
           "subject": "",
-          "content": "82"
+          "content": "982"
         },
         {
           "period": 3,
           "subject": "",
-          "content": "83"
+          "content": "983"
         },
         {
           "period": 4,
           "subject": "",
-          "content": "84"
+          "content": "984"
         },
         {
           "period": 5,
           "subject": "",
-          "content": "8885"
+          "content": "98885"
         },
         {
           "period": 6,
           "subject": "",
-          "content": "86"
+          "content": "986"
         }
       ],
-      "classLog": "8일"
+      "classLog": "월요일\n"
     }
   ],
   "students": [
@@ -311,5 +311,5 @@
       "dueDate": "2026-02-09"
     }
   ],
-  "exportedAt": "2026-02-09T00:16:31.271Z"
+  "exportedAt": "2026-02-09T00:31:36.118Z"
 }

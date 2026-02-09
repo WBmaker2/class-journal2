@@ -161,14 +161,14 @@ export const SettingsManager: React.FC = () => {
                 <li>
                   <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="underline font-medium hover:text-blue-900 inline-flex items-center gap-1">
                     Google Cloud Console <ExternalLink size={12} />
-                  </a>에 접속합니다.
+                  </a>에 접속합니다. 새 프로젝트를 생성합니다.
                 </li>
                 <li>[API 및 서비스] &gt; [사용자 인증 정보]로 이동합니다.</li>
-                <li>생성한 <strong>OAuth 2.0 클라이언트 ID</strong>를 클릭하여 수정 화면으로 들어갑니다.</li>
+                <li><strong>OAuth 2.0 클라이언트 ID</strong>를 생성하고, 클릭하여 수정 화면으로 들어갑니다.</li>
                 <li>
                   <strong>승인된 자바스크립트 원본</strong> 항목에 아래 주소를 <strong>반드시 추가</strong>하세요:
                   <br />
-                  <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">http://localhost:5173</code>
+                  <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">https://class-journal.vercel.app</code>
                   <span className="text-xs text-blue-600">(마지막에 '/'가 없어야 합니다)</span>
                 </li>
                 <li>저장 후 <strong>Client ID</strong>를 복사하여 아래에 입력하세요.</li>
