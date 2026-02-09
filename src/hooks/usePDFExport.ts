@@ -15,6 +15,17 @@ export const usePDFExport = () => {
     }
 
     try {
+      // Temporarily move the element to the viewport to ensure capture
+      const originalPosition = element.style.position;
+      const originalLeft = element.style.left;
+      const originalTop = element.style.top;
+      const originalZIndex = element.style.zIndex;
+
+      element.style.position = 'fixed';
+      element.style.left = '0';
+      element.style.top = '0';
+      element.style.zIndex = '-9999';
+
       // 1. Capture the element as a canvas
       // scale: 2 for high DPI output (better quality for Korean text)
       const canvas = await html2canvas(element, {
@@ -23,6 +34,12 @@ export const usePDFExport = () => {
         logging: false,
         backgroundColor: '#ffffff'
       });
+
+      // Restore original styles
+      element.style.position = originalPosition;
+      element.style.left = originalLeft;
+      element.style.top = originalTop;
+      element.style.zIndex = originalZIndex;
 
       // 2. Convert canvas to image data
       const imgData = canvas.toDataURL('image/png');

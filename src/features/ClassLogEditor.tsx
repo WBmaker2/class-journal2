@@ -62,7 +62,7 @@ export const ClassLogEditor: React.FC = () => {
       />
       <CardContent className="space-y-4">
         {/* Hidden area for PDF capture to include header info */}
-        <div id="pdf-log-content" className="p-8 bg-white hidden print:block" style={{ width: '800px', position: 'absolute', left: '-9999px' }}>
+        <div id="pdf-log-content" className="p-8 bg-white print:block" style={{ width: '800px', position: 'absolute', left: '-9999px', top: 0 }}>
           <div className="border-b-2 border-blue-600 pb-4 mb-6">
             <h1 className="text-3xl font-bold text-gray-900">학급 일지</h1>
             <div className="mt-2 text-gray-600 flex gap-4">
