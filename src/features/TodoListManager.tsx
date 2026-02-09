@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useJournal } from '../context/JournalContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
-import { Plus, CheckCircle, Circle, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, CheckCircle, Circle, Trash2, GripVertical } from 'lucide-react';
 import type { TodoItem } from '../types';
 
 export const TodoListManager: React.FC = () => {
   const { todos, updateTodos, currentDate } = useJournal();
   const [newTodo, setNewTodo] = useState('');
+  
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   // Filter todos for the selected date
   const filteredTodos = todos.filter(todo => todo.dueDate === currentDate);
@@ -38,40 +41,45 @@ export const TodoListManager: React.FC = () => {
     updateTodos(updated);
   };
 
-  const handleMoveUp = (id: string) => {
-    const index = filteredTodos.findIndex(t => t.id === id);
-    if (index <= 0) return;
-
-    const currentTodo = filteredTodos[index];
-    const prevTodo = filteredTodos[index - 1];
-
-    const globalIndexCurrent = todos.findIndex(t => t.id === currentTodo.id);
-    const globalIndexPrev = todos.findIndex(t => t.id === prevTodo.id);
-
-    if (globalIndexCurrent === -1 || globalIndexPrev === -1) return;
-
-    const newTodos = [...todos];
-    // Swap
-    [newTodos[globalIndexCurrent], newTodos[globalIndexPrev]] = [newTodos[globalIndexPrev], newTodos[globalIndexCurrent]];
-    updateTodos(newTodos);
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+    dragItem.current = position;
+    e.currentTarget.classList.add('opacity-50');
   };
 
-  const handleMoveDown = (id: string) => {
-    const index = filteredTodos.findIndex(t => t.id === id);
-    if (index === -1 || index >= filteredTodos.length - 1) return;
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+    dragOverItem.current = position;
+  };
 
-    const currentTodo = filteredTodos[index];
-    const nextTodo = filteredTodos[index + 1];
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove('opacity-50');
+    
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
 
-    const globalIndexCurrent = todos.findIndex(t => t.id === currentTodo.id);
-    const globalIndexNext = todos.findIndex(t => t.id === nextTodo.id);
+    // Reorder filtered list
+    const newFiltered = [...filteredTodos];
+    const draggedItemContent = newFiltered[dragItem.current];
+    newFiltered.splice(dragItem.current, 1);
+    newFiltered.splice(dragOverItem.current, 0, draggedItemContent);
 
-    if (globalIndexCurrent === -1 || globalIndexNext === -1) return;
-
+    // Sync with global todos
+    // Replace items of currentDate in global todos with items from newFiltered in order
     const newTodos = [...todos];
-    // Swap
-    [newTodos[globalIndexCurrent], newTodos[globalIndexNext]] = [newTodos[globalIndexNext], newTodos[globalIndexCurrent]];
+    let filteredIdx = 0;
+    for (let i = 0; i < newTodos.length; i++) {
+      if (newTodos[i].dueDate === currentDate) {
+        newTodos[i] = newFiltered[filteredIdx];
+        filteredIdx++;
+      }
+    }
+
     updateTodos(newTodos);
+    dragItem.current = null;
+    dragOverItem.current = null;
   };
 
   return (
@@ -101,11 +109,19 @@ export const TodoListManager: React.FC = () => {
             filteredTodos.map((todo, index) => (
               <div 
                 key={todo.id} 
-                className={`flex items-center justify-between p-3 rounded-lg border ${
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragEnter={(e) => handleDragEnter(e, index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
                   todo.completed ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'
-                }`}
+                } hover:shadow-md cursor-move`}
               >
                 <div className="flex items-center gap-3 flex-1">
+                  <div className="text-gray-400 cursor-grab active:cursor-grabbing">
+                    <GripVertical size={16} />
+                  </div>
                   <button 
                     onClick={() => toggleTodo(todo.id)}
                     className={`transition-colors ${
@@ -119,41 +135,13 @@ export const TodoListManager: React.FC = () => {
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-1">
-                  <div className="flex flex-col gap-0.5 mr-2">
-                    <button 
-                      onClick={() => handleMoveUp(todo.id)}
-                      disabled={index === 0}
-                      className={`p-0.5 rounded transition-colors ${
-                        index === 0 
-                          ? 'text-gray-200 cursor-not-allowed' 
-                          : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100'
-                      }`}
-                      title="위로 이동"
-                    >
-                      <ChevronUp size={14} />
-                    </button>
-                    <button 
-                      onClick={() => handleMoveDown(todo.id)}
-                      disabled={index === filteredTodos.length - 1}
-                      className={`p-0.5 rounded transition-colors ${
-                        index === filteredTodos.length - 1 
-                          ? 'text-gray-200 cursor-not-allowed' 
-                          : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100'
-                      }`}
-                      title="아래로 이동"
-                    >
-                      <ChevronDown size={14} />
-                    </button>
-                  </div>
-                  <button 
-                    onClick={() => deleteTodo(todo.id)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                    title="삭제"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                <button 
+                  onClick={() => deleteTodo(todo.id)}
+                  className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                  title="삭제"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             ))
           )}
