@@ -66,6 +66,7 @@ export const AttendanceTracker: React.FC = () => {
         attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
         lessonLogs: [],
         classLog: '',
+        studentNotes: {},
       });
     }
   }, [currentDate, records, students, saveCurrentRecord]);

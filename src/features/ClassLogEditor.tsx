@@ -45,7 +45,8 @@ export const ClassLogEditor: React.FC = () => {
       atmosphere: 'Calm',
       attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
       lessonLogs: [],
-      classLog: log
+      classLog: log,
+      studentNotes: {},
     };
     saveCurrentRecord(newRecord);
   };

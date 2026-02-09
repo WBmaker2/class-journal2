@@ -30,6 +30,7 @@ export const generateDummyRecords = (): DailyRecord[] => {
         { period: 2, subject: '수학', content: '분수의 덧셈과 뺄셈' },
       ],
       classLog: `오늘 학급 분위기는 대체로 ${i % 2 === 0 ? '좋았습니다' : '산만했습니다'}.`,
+      studentNotes: {},
     });
   }
   

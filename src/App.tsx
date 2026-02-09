@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { LayoutDashboard, ClipboardCheck, BookOpen, Clock, Settings, Calendar } from 'lucide-react'
+import { LayoutDashboard, ClipboardCheck, BookOpen, Clock, Settings, Calendar, Users } from 'lucide-react'
 import { AttendanceTracker } from './features/AttendanceTracker'
 import { ClassLogEditor } from './features/ClassLogEditor'
 import { TimetableManager } from './features/TimetableManager'
+import { StudentCumulativeRecord } from './features/StudentCumulativeRecord'
 import { Dashboard } from './features/Dashboard'
 import { SettingsManager } from './features/SettingsManager'
 import { useJournal } from './context/JournalContext'
 import { SyncStatusIndicator } from './components/SyncStatusIndicator'
 
-type Tab = 'dashboard' | 'attendance' | 'timetable' | 'logs' | 'settings';
+type Tab = 'dashboard' | 'attendance' | 'timetable' | 'logs' | 'settings' | 'student-records';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
@@ -18,6 +19,7 @@ function App() {
     { id: 'attendance', label: '출결 관리', icon: ClipboardCheck },
     { id: 'timetable', label: '시간표 기록', icon: Clock },
     { id: 'logs', label: '학급 일지', icon: BookOpen },
+    { id: 'student-records', label: '학생별 누가기록', icon: Users },
     { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
     { id: 'settings', label: '설정', icon: Settings },
   ];
@@ -99,6 +101,7 @@ function App() {
           {activeTab === 'attendance' && <AttendanceTracker />}
           {activeTab === 'timetable' && <TimetableManager />}
           {activeTab === 'logs' && <ClassLogEditor />}
+          {activeTab === 'student-records' && <StudentCumulativeRecord />}
           {activeTab === 'settings' && <SettingsManager />}
         </div>
       </main>

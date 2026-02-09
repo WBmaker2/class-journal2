@@ -28,6 +28,7 @@ export interface DailyRecord {
   attendance: AttendanceEntry[];
   lessonLogs: LessonLog[];
   classLog: string; // Markdown
+  studentNotes: Record<string, string>; // Student ID -> Note
 }
 
 export interface TodoItem {

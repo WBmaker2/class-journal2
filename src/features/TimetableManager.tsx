@@ -39,7 +39,8 @@ export const TimetableManager: React.FC = () => {
       atmosphere: 'Calm',
       attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
       lessonLogs: newLogs,
-      classLog: ''
+      classLog: '',
+      studentNotes: {},
     };
     saveCurrentRecord(newRecord);
   };
