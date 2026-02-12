@@ -84,7 +84,7 @@ export const TodoListManager: React.FC = () => {
 
   return (
     <Card className="h-full">
-      <CardHeader title="할 일 목록" subtitle={`${currentDate} 업무를 관리하세요`} />
+      <CardHeader title="할 일 목록(To Do List)" subtitle={`${currentDate} 업무를 관리하세요`} />
       <CardContent>
         <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
           <input
@@ -102,7 +102,7 @@ export const TodoListManager: React.FC = () => {
           </button>
         </form>
 
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+        <div className="space-y-2 h-[600px] overflow-y-auto">
           {filteredTodos.length === 0 ? (
             <p className="text-center text-gray-400 py-4 text-sm">등록된 할 일이 없습니다.</p>
           ) : (
