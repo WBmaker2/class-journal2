@@ -156,7 +156,8 @@ export const SettingsManager: React.FC = () => {
                     Google Cloud Console <ExternalLink size={12} />
                   </a>에 접속합니다. 새 프로젝트를 생성합니다.
                 </li>
-                <li>[API 및 서비스] &gt; [사용자 인증 정보]으로 이동합니다. <strong>'+ 사용자 인증정보 만들기 - OAuth 2.0 클라이언트 ID'</strong>를 선택합니다.</li>
+                <li>[API 및 서비스] &gt; [사용자 인증 정보]으로 이동합니다. Oauth <strong>'동의 화면 구성'</strong>을 클릭합니다. 앱 이름을 적고, 대상을 <strong>'외부'</strong>로 설정 후, <strong>'만들기'</strong>를 합니다.</li>
+                <li>[API 및 서비스] &gt; [사용자 인증 정보]에서 <strong>'+ 사용자 인증정보 만들기 - OAuth 2.0 클라이언트 ID'</strong>를 선택합니다.</li>
                 <li>
                   애플리케이션 유형 - <strong>웹 애플리케이션</strong> 선택, <strong>승인된 자바스크립트 원본</strong> 항목에 아래 주소를 <strong>반드시 추가</strong>하세요:
                   <br />
