@@ -6,7 +6,6 @@ import { useGoogleDrive } from '../hooks/useGoogleDrive';
 import { localStorageService } from '../services/localStorage';
 import { useToast } from '../context/ToastContext';
 import { ClassManager } from './ClassManager'; // Import ClassManager
-import { useClass } from '../context/ClassContext'; // Import useClass
 
 const STORAGE_KEY = 'cj_google_config';
 
@@ -40,7 +39,6 @@ export const SettingsManager: React.FC = () => {
   const [showSecrets, setShowSecrets] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const { showToast } = useToast();
-  const { activeClassId } = useClass();
 
   const { 
     isLoggedIn, 
