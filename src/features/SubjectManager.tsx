@@ -74,7 +74,7 @@ export const SubjectManager: React.FC = () => {
         </div>
 
         {/* Subject List */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="space-y-2">
           {subjects.sort((a,b) => a.order - b.order).map(subject => (
             <div
               key={subject.id}
@@ -82,33 +82,33 @@ export const SubjectManager: React.FC = () => {
               onDragStart={(e) => onDragStart(e, subject.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => onDrop(e, subject.id)}
-              className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-white transition-colors"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-white transition-colors"
             >
               {editingSubjectId === subject.id ? (
                 <input
                   type="text"
                   value={editingSubjectName}
                   onChange={(e) => setEditingSubjectName(e.target.value)}
-                  className="flex-grow rounded-md border-gray-300 shadow-sm p-1 border text-sm"
+                  className="flex-grow rounded-md border-gray-300 shadow-sm p-1 border"
                   autoFocus
                   onBlur={() => handleSave(subject.id)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSave(subject.id)}
                 />
               ) : (
-                <span className="text-sm font-medium truncate">{subject.name}</span>
+                <span className="font-medium">{subject.name}</span>
               )}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {editingSubjectId === subject.id ? (
-                  <Button onClick={() => handleSave(subject.id)} variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    <Save size={14} />
+                  <Button onClick={() => handleSave(subject.id)} variant="ghost" size="sm">
+                    <Save size={16} />
                   </Button>
                 ) : (
-                  <Button onClick={() => handleEdit(subject)} variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    <Edit size={14} />
+                  <Button onClick={() => handleEdit(subject)} variant="ghost" size="sm">
+                    <Edit size={16} />
                   </Button>
                 )}
-                <Button onClick={() => deleteSubject(subject.id)} variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500 hover:text-red-700">
-                  <Trash size={14} />
+                <Button onClick={() => deleteSubject(subject.id)} variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                  <Trash size={16} />
                 </Button>
               </div>
             </div>
