@@ -67,7 +67,7 @@ export const SubjectManager: React.FC = () => {
             className="flex-grow block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             onKeyPress={(e) => e.key === 'Enter' && handleAddSubject()}
           />
-          <Button onClick={handleAddSubject} className="flex items-center gap-2">
+          <Button onClick={handleAddSubject} className="flex items-center justify-center gap-2 min-w-[80px] whitespace-nowrap">
             <PlusCircle size={16} />
             추가
           </Button>
