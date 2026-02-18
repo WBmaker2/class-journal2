@@ -8,6 +8,7 @@ import { Dashboard } from './features/Dashboard'
 import { SettingsManager } from './features/SettingsManager'
 import { useJournal } from './context/JournalContext'
 import { SyncStatusIndicator } from './components/SyncStatusIndicator'
+import { ClassSelector } from './components/ClassSelector'
 
 type Tab = 'dashboard' | 'attendance' | 'timetable' | 'logs' | 'settings' | 'student-records';
 
@@ -29,9 +30,9 @@ function App() {
       {/* Sidebar (Desktop) */}
       <aside className="w-full md:w-64 bg-white border-b md:border-r border-gray-200 p-4 space-y-2 hidden md:block flex-shrink-0">
         <div className="mb-8 px-2">
-          <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
+          <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
             <BookOpen size={24} />
-            우리 반 학급 일지
+            학급 일지 (중등, 전담)
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
@@ -53,6 +54,8 @@ function App() {
             <Calendar className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
           </div>
         </div>
+        
+        <ClassSelector />
 
         <nav className="space-y-1">
           {navItems.map((item) => (
@@ -77,9 +80,9 @@ function App() {
         {/* Mobile Header */}
         <header className="mb-6 md:hidden space-y-4">
            <div className="flex items-center justify-between">
-             <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
+             <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
                <BookOpen size={24} />
-               우리 반 학급 일지
+               학급 일지 (중등, 전담)
              </h1>
              <SyncStatusIndicator />
            </div>

@@ -5,6 +5,8 @@ import { Eye, EyeOff, Save, Lock, HelpCircle, ExternalLink, LogIn, LogOut, Cloud
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
 import { localStorageService } from '../services/localStorage';
 import { useToast } from '../context/ToastContext';
+import { ClassManager } from './ClassManager'; // Import ClassManager
+import { useClass } from '../context/ClassContext'; // Import useClass
 
 const STORAGE_KEY = 'cj_google_config';
 
@@ -38,6 +40,7 @@ export const SettingsManager: React.FC = () => {
   const [showSecrets, setShowSecrets] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const { showToast } = useToast();
+  const { activeClassId } = useClass();
 
   const { 
     isLoggedIn, 
@@ -88,13 +91,11 @@ export const SettingsManager: React.FC = () => {
   };
 
   const handleExportJson = () => {
-    const data = {
-      records: localStorageService.getAllRecords(),
-      students: localStorageService.getStudents(),
-      todos: localStorageService.getTodos(),
-      exportedAt: new Date().toISOString(),
-    };
-
+    if (!activeClassId) {
+        showToast('내보내기할 학급을 선택해주세요.', 'error');
+        return;
+    }
+    const data = localStorageService.getClassData(activeClassId);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -108,6 +109,11 @@ export const SettingsManager: React.FC = () => {
   };
 
   const handleImportJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!activeClassId) {
+        showToast('데이터를 가져올 학급을 선택해주세요.', 'error');
+        event.target.value = '';
+        return;
+    }
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -118,13 +124,13 @@ export const SettingsManager: React.FC = () => {
         const data = JSON.parse(content);
 
         if (data.records && Array.isArray(data.records)) {
-            localStorage.setItem('cj_daily_records', JSON.stringify(data.records));
+            localStorageService.saveRecords(activeClassId, data.records);
         }
         if (data.students && Array.isArray(data.students)) {
-            localStorage.setItem('cj_students', JSON.stringify(data.students));
+            localStorageService.saveStudents(activeClassId, data.students);
         }
         if (data.todos && Array.isArray(data.todos)) {
-            localStorage.setItem('cj_todos', JSON.stringify(data.todos));
+            localStorageService.saveTodos(activeClassId, data.todos);
         }
 
         showToast('데이터가 성공적으로 복구되었습니다.', 'success');
@@ -141,6 +147,7 @@ export const SettingsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <ClassManager />
       <Card>
         <CardHeader 
           title="Google Drive 연동 설정" 

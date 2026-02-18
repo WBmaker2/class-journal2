@@ -38,6 +38,12 @@ export interface TodoItem {
   dueDate?: string;
 }
 
+export interface Class {
+  id: string;
+  name: string;
+  order: number;
+}
+
 declare global {
   const gapi: any;
   const google: any;
