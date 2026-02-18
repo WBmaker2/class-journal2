@@ -160,7 +160,7 @@ export const SettingsManager: React.FC = () => {
                 <li>
                   애플리케이션 유형 - <strong>웹 애플리케이션</strong> 선택, <strong>승인된 자바스크립트 원본</strong> 항목에 아래 주소를 <strong>반드시 추가</strong>하세요:
                   <br />
-                  <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">https://class-journal.vercel.app</code>
+                  <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">https://class-journal2.vercel.app</code>
                   <span className="text-xs text-blue-600">(마지막에 '/'가 없어야 합니다)</span>
                 </li>
                 <li>[API 및 서비스] - [사용설정된 API 및 서비스] 에서 <strong>'+API 및 서비스 사용 설정'</strong> 버튼을 클릭합니다. 'drive'를 검색 하고 <strong>'Google Drive API'</strong>를 선택 후 '사용' 버튼을 클릭합니다.</li>
