@@ -10,6 +10,7 @@ import { SettingsManager } from './features/SettingsManager'
 import { useJournal } from './context/JournalContext'
 import { SyncStatusIndicator } from './components/SyncStatusIndicator'
 import { ClassSelector } from './components/ClassSelector'
+import { SecurityKeyModal } from './components/ui/SecurityKeyModal'
 
 type Tab = 'dashboard' | 'attendance' | 'timetable' | 'class-timetable' | 'logs' | 'settings' | 'student-records';
 
@@ -29,12 +30,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      <SecurityKeyModal />
       {/* Sidebar (Desktop) */}
       <aside className="w-full md:w-64 bg-white border-b md:border-r border-gray-200 p-4 space-y-2 hidden md:block flex-shrink-0">
         <div className="mb-8 px-2">
           <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
             <BookOpen size={24} />
-            우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.0</span>
+            우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.1</span>
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
@@ -84,7 +86,7 @@ function App() {
            <div className="flex items-center justify-between">
              <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
                <BookOpen size={24} />
-               우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.0</span>
+               우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.1</span>
              </h1>
              <SyncStatusIndicator />
            </div>

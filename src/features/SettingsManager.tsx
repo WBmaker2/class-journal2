@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { LogIn, LogOut, CloudUpload, RefreshCw, FileDown, FileUp, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { LogIn, LogOut, CloudUpload, RefreshCw, FileDown, FileUp, ShieldCheck, CheckCircle2, Lock, Key } from 'lucide-react';
 import { localStorageService } from '../services/localStorage';
 import { useToast } from '../context/ToastContext';
 import { ClassManager } from './ClassManager';
@@ -10,7 +10,14 @@ import { useSupabase } from '../context/SupabaseContext';
 
 export const SettingsManager: React.FC = () => {
   const { showToast } = useToast();
-  const { user, isLoggedIn, isSyncing, lastSync, signIn, signOut, syncData } = useSupabase();
+  const { user, isLoggedIn, isSyncing, lastSync, signIn, signOut, syncData, securityKey, setSecurityKey } = useSupabase();
+
+  const handleResetSecurityKey = () => {
+    if (confirm('현재 세션의 보안 비밀번호를 초기화하시겠습니까? (서버 데이터는 삭제되지 않으며, 다시 입력해야 합니다.)')) {
+      setSecurityKey(null);
+      showToast('보안 비밀번호 세션이 초기화되었습니다.', 'info');
+    }
+  };
 
   const handleExportJson = () => {
     const data = localStorageService.getAllData();
@@ -57,7 +64,7 @@ export const SettingsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Cloud Sync Section (v3.0) */}
+      {/* Cloud Sync Section (v3.1) */}
       <Card>
         <CardHeader 
           title="간편 클라우드 동기화" 
@@ -83,21 +90,41 @@ export const SettingsManager: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* User Profile */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                    <CheckCircle2 size={24} />
+              {/* User Profile & Security Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{user?.email}</p>
+                      <p className="text-xs text-green-600 font-medium">로그인됨</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">{user?.email}</p>
-                    <p className="text-xs text-green-600 font-medium">클라우드 동기화 활성화됨</p>
-                  </div>
+                  <Button onClick={signOut} variant="ghost" size="sm" className="text-red-500">
+                    <LogOut size={16} />
+                  </Button>
                 </div>
-                <Button onClick={signOut} variant="ghost" size="sm" className="text-red-500">
-                  <LogOut size={16} className="mr-2" />
-                  로그아웃
-                </Button>
+
+                <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-indigo-600 p-2 rounded-full text-white">
+                      <Lock size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-indigo-900">종단간 암호화(E2EE)</p>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        {securityKey ? '보안 키 활성화됨' : '보안 키 필요'}
+                      </p>
+                    </div>
+                  </div>
+                  {securityKey && (
+                    <Button onClick={handleResetSecurityKey} variant="ghost" size="sm" className="text-indigo-400">
+                      <Key size={16} />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Sync Status */}
@@ -118,13 +145,19 @@ export const SettingsManager: React.FC = () => {
                 
                 <Button 
                   onClick={syncData} 
-                  disabled={isSyncing}
+                  disabled={isSyncing || !securityKey}
                   className="h-full flex items-center justify-center gap-2"
                 >
                   <CloudUpload size={18} />
                   지금 즉시 백업
                 </Button>
               </div>
+              
+              {!securityKey && (
+                <p className="text-xs text-center text-red-500 animate-pulse font-medium">
+                  ⚠️ 데이터를 동기화하려면 보안 비밀번호를 입력해야 합니다.
+                </p>
+              )}
             </div>
           )}
         </CardContent>
