@@ -42,6 +42,24 @@ export interface Class {
   id: string;
   name: string;
   order: number;
+  timetable?: Timetable;
+}
+
+export interface TimetableCell {
+  subject: string;
+  startTime: string; // "HH:mm"
+  endTime: string;   // "HH:mm"
+}
+
+export interface Timetable {
+  // 요일(0-4: 월-금) -> 교시(1-7) -> 데이터
+  days: Record<number, Record<number, TimetableCell>>;
+}
+
+export interface TimetableTemplate {
+  id: string;
+  name: string;
+  data: Timetable;
 }
 
 declare global {

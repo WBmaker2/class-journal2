@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { localStorageService } from '../services/localStorage';
-import type { Class } from '../types';
+import type { Class, Timetable, TimetableTemplate } from '../types';
 
 interface ClassContextType {
   classes: Class[];
@@ -11,6 +11,10 @@ interface ClassContextType {
   deleteClass: (id: string) => void;
   reorderClasses: (classes: Class[]) => void;
   isLoading: boolean;
+  templates: TimetableTemplate[];
+  saveTemplate: (name: string, data: Timetable) => void;
+  deleteTemplate: (id: string) => void;
+  updateTimetable: (classId: string, timetable: Timetable) => void;
 }
 
 const ClassContext = createContext<ClassContextType | undefined>(undefined);
@@ -19,11 +23,13 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [classes, setClasses] = useState<Class[]>([]);
   const [activeClassId, setActiveClassIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [templates, setTemplates] = useState<TimetableTemplate[]>([]);
 
   useEffect(() => {
     localStorageService.runMigration();
     const allData = localStorageService.getAllData();
     setClasses(allData.classes);
+    setTemplates(allData.templates || []);
     const savedActiveClassId = allData.activeClassId;
     if (savedActiveClassId) {
       setActiveClassIdState(savedActiveClassId);
@@ -76,6 +82,29 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorageService.saveClasses(updatedClasses);
   };
 
+  const saveTemplate = (name: string, data: Timetable) => {
+    const newTemplate: TimetableTemplate = {
+      id: self.crypto.randomUUID(),
+      name,
+      data,
+    };
+    const updatedTemplates = [...templates, newTemplate];
+    setTemplates(updatedTemplates);
+    localStorageService.saveTemplates(updatedTemplates);
+  };
+
+  const deleteTemplate = (id: string) => {
+    const updatedTemplates = templates.filter(t => t.id !== id);
+    setTemplates(updatedTemplates);
+    localStorageService.saveTemplates(updatedTemplates);
+  };
+
+  const updateTimetable = (classId: string, timetable: Timetable) => {
+    const updatedClasses = classes.map(c => c.id === classId ? { ...c, timetable } : c);
+    setClasses(updatedClasses);
+    localStorageService.updateClassTimetable(classId, timetable);
+  };
+
   return (
     <ClassContext.Provider value={{ 
         classes, 
@@ -85,7 +114,11 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateClass,
         deleteClass,
         reorderClasses,
-        isLoading
+        isLoading,
+        templates,
+        saveTemplate,
+        deleteTemplate,
+        updateTimetable
     }}>
       {children}
     </ClassContext.Provider>

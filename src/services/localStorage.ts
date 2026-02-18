@@ -1,4 +1,4 @@
-import type { DailyRecord, Student, TodoItem, Class } from '../types';
+import type { DailyRecord, Student, TodoItem, Class, TimetableTemplate } from '../types';
 
 const V1_KEYS = {
   RECORDS: 'cj_daily_records',
@@ -18,12 +18,14 @@ interface AppData {
   classes: Class[];
   activeClassId: string | null;
   classData: Record<string, ClassData>;
+  templates?: TimetableTemplate[];
 }
 
 const getInitialData = (): AppData => ({
   classes: [],
   activeClassId: null,
   classData: {},
+  templates: [],
 });
 
 export const localStorageService = {
@@ -145,5 +147,26 @@ export const localStorageService = {
     const data = localStorageService.getAllData();
     data.activeClassId = classId;
     localStorageService.saveAllData(data);
+  },
+
+  // Timetable Templates
+  saveTemplates: (templates: TimetableTemplate[]) => {
+    const data = localStorageService.getAllData();
+    data.templates = templates;
+    localStorageService.saveAllData(data);
+  },
+
+  getTemplates: (): TimetableTemplate[] => {
+    const data = localStorageService.getAllData();
+    return data.templates || [];
+  },
+
+  updateClassTimetable: (classId: string, timetable: any) => {
+    const data = localStorageService.getAllData();
+    const classIdx = data.classes.findIndex(c => c.id === classId);
+    if (classIdx > -1) {
+      data.classes[classIdx].timetable = timetable;
+      localStorageService.saveAllData(data);
+    }
   }
 };

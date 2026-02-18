@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { LayoutDashboard, ClipboardCheck, BookOpen, Clock, Settings, Calendar, Users } from 'lucide-react'
 import { AttendanceTracker } from './features/AttendanceTracker'
 import { ClassLogEditor } from './features/ClassLogEditor'
+import { LessonLogManager } from './features/LessonLogManager'
 import { TimetableManager } from './features/TimetableManager'
 import { StudentCumulativeRecord } from './features/StudentCumulativeRecord'
 import { Dashboard } from './features/Dashboard'
@@ -10,7 +11,7 @@ import { useJournal } from './context/JournalContext'
 import { SyncStatusIndicator } from './components/SyncStatusIndicator'
 import { ClassSelector } from './components/ClassSelector'
 
-type Tab = 'dashboard' | 'attendance' | 'timetable' | 'logs' | 'settings' | 'student-records';
+type Tab = 'dashboard' | 'attendance' | 'timetable' | 'class-timetable' | 'logs' | 'settings' | 'student-records';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
@@ -18,7 +19,8 @@ function App() {
 
   const navItems = [
     { id: 'attendance', label: '출결 관리', icon: ClipboardCheck },
-    { id: 'timetable', label: '시간표 기록', icon: Clock },
+    { id: 'timetable', label: '오늘의 수업', icon: Clock },
+    { id: 'class-timetable', label: '학급 시간표', icon: Calendar },
     { id: 'logs', label: '학급 일지', icon: BookOpen },
     { id: 'student-records', label: '학생별 누가기록', icon: Users },
     { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
@@ -51,7 +53,7 @@ function App() {
               onChange={(e) => setCurrentDate(e.target.value)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border pl-9"
             />
-            <Calendar className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
+            <Clock className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
           </div>
         </div>
         
@@ -95,14 +97,15 @@ function App() {
                onChange={(e) => setCurrentDate(e.target.value)}
                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border pl-9"
              />
-             <Calendar className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
+             <Clock className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
            </div>
         </header>
 
         <div className="max-w-4xl mx-auto pb-20 md:pb-0">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'attendance' && <AttendanceTracker />}
-          {activeTab === 'timetable' && <TimetableManager />}
+          {activeTab === 'timetable' && <LessonLogManager />}
+          {activeTab === 'class-timetable' && <TimetableManager />}
           {activeTab === 'logs' && <ClassLogEditor />}
           {activeTab === 'student-records' && <StudentCumulativeRecord />}
           {activeTab === 'settings' && <SettingsManager />}
