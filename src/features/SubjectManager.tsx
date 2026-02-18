@@ -3,7 +3,7 @@ import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { PlusCircle, Trash, Edit, Save } from 'lucide-react';
-import { Subject } from '../types';
+import type { Subject } from '../types';
 
 export const SubjectManager: React.FC = () => {
   const { subjects, addSubject, updateSubject, deleteSubject, reorderSubjects } = useClass();
