@@ -91,11 +91,7 @@ export const SettingsManager: React.FC = () => {
   };
 
   const handleExportJson = () => {
-    if (!activeClassId) {
-        showToast('내보내기할 학급을 선택해주세요.', 'error');
-        return;
-    }
-    const data = localStorageService.getClassData(activeClassId);
+    const data = localStorageService.getAllData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -105,15 +101,10 @@ export const SettingsManager: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    showToast('백업 파일이 생성되었습니다.', 'success');
+    showToast('전체 데이터 백업 파일이 생성되었습니다.', 'success');
   };
 
   const handleImportJson = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!activeClassId) {
-        showToast('데이터를 가져올 학급을 선택해주세요.', 'error');
-        event.target.value = '';
-        return;
-    }
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -123,18 +114,15 @@ export const SettingsManager: React.FC = () => {
         const content = e.target?.result as string;
         const data = JSON.parse(content);
 
-        if (data.records && Array.isArray(data.records)) {
-            localStorageService.saveRecords(activeClassId, data.records);
-        }
-        if (data.students && Array.isArray(data.students)) {
-            localStorageService.saveStudents(activeClassId, data.students);
-        }
-        if (data.todos && Array.isArray(data.todos)) {
-            localStorageService.saveTodos(activeClassId, data.todos);
+        // Basic validation
+        if (data.classes && data.classData) {
+            localStorageService.saveAllData(data);
+            showToast('데이터가 성공적으로 복구되었습니다. 앱을 새로고침합니다.', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            throw new Error('Invalid backup file format');
         }
 
-        showToast('데이터가 성공적으로 복구되었습니다.', 'success');
-        setTimeout(() => window.location.reload(), 1000);
       } catch (err) {
         console.error('Failed to parse backup file', err);
         showToast('백업 파일 형식이 올바르지 않습니다.', 'error');

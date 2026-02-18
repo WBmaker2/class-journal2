@@ -146,15 +146,15 @@ export const ClassLogEditor: React.FC = () => {
       </Card>
 
       {/* Hidden Render Area for Batch Export */}
-      {(exportMode === 'pdf' || isExporting) && (
-        <div className="fixed top-0 left-0 pointer-events-none" style={{ zIndex: 1000 }}>
+      {isExporting && (
+        <div className="fixed top-0 left-0 opacity-0 pointer-events-none -z-10">
            {/* Render all records in range */}
            {getSortedRecords().map((record) => (
              <div 
                key={record.date} 
                id={`pdf-log-${record.date}`}
                className="bg-white p-6 border-b border-gray-300 mb-4"
-               style={{ width: '800px', position: 'absolute', top: 0, left: '-9999px' }}
+               style={{ width: '800px' }}
              >
                 <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
                   <h3 className="text-xl font-bold text-gray-800">{record.date}</h3>

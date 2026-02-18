@@ -197,14 +197,14 @@ export const StudentCumulativeRecord: React.FC = () => {
       </Card>
 
       {/* Hidden Render Area for Batch Export */}
-      {(exportMode === 'pdf' || isExporting) && (
-        <div className="fixed top-0 left-0 pointer-events-none" style={{ zIndex: 1000 }}>
+      {isExporting && (
+        <div className="fixed top-0 left-0 opacity-0 pointer-events-none -z-10">
            {getStudentSummaries().map((summary) => (
              <div 
                key={summary.student.id} 
                id={`pdf-student-${summary.student.id}`}
                className="bg-white p-8 border-b border-gray-300 mb-4"
-               style={{ width: '800px', position: 'absolute', top: 0, left: '-9999px' }}
+               style={{ width: '800px' }}
              >
                 <div className="border-b-2 border-gray-800 pb-4 mb-6">
                   <h3 className="text-2xl font-bold text-gray-900">

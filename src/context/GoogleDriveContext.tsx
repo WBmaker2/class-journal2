@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { googleDriveService } from '../services/googleDrive';
-import { useJournal } from './JournalContext';
+import { localStorageService } from '../services/localStorage';
 import { useToast } from './ToastContext';
 
 const BACKUP_FILE_NAME = 'class_journal_backup.json';
@@ -32,24 +32,20 @@ interface GoogleDriveContextType {
 const GoogleDriveContext = createContext<GoogleDriveContextType | undefined>(undefined);
 
 export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { students, records, todos, saveCurrentRecord, updateTodos, manageStudents } = useJournal();
   const { showToast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<string | null>(null); // For display
+  const [lastSync, setLastSync] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // New States for Reliability
   const [pendingChanges, setPendingChanges] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
   const [conflictError, setConflictError] = useState<{ local: string, remote: string } | null>(null);
 
-  const isRestoring = useRef(false);
-  const isFirstMount = useRef(true);
+  const lastSavedData = useRef<string | null>(null);
   const syncTimeoutRef = useRef<number | null>(null);
 
-  // Initialize Device ID
   useEffect(() => {
     if (!localStorage.getItem(DEVICE_ID_KEY)) {
       const deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -57,7 +53,6 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, []);
 
-  // Check for stored token & last sync time on mount
   useEffect(() => {
     const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (stored) {
@@ -74,26 +69,26 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
         localStorage.removeItem(TOKEN_STORAGE_KEY);
       }
     }
-
     const savedLastSync = localStorage.getItem(SYNC_TIME_KEY);
     if (savedLastSync) {
       setLastSync(new Date(savedLastSync).toLocaleString());
     }
+    // Set initial data state for change detection
+    lastSavedData.current = JSON.stringify(localStorageService.getAllData());
   }, []);
 
-  // Detect Data Changes
+  // Detect Data Changes by polling localStorage
   useEffect(() => {
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      return;
-    }
-    if (isRestoring.current) {
-      isRestoring.current = false;
-      return;
-    }
-    
-    setPendingChanges(true);
-  }, [students, records, todos]);
+    const interval = setInterval(() => {
+      const currentData = JSON.stringify(localStorageService.getAllData());
+      if (lastSavedData.current !== currentData) {
+        setPendingChanges(true);
+        lastSavedData.current = currentData;
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogin = useCallback((clientId: string) => {
     return new Promise<void>((resolve, reject) => {
@@ -109,22 +104,15 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
             reject(response);
             return;
           }
-          
           const token = response.access_token;
           const expiresIn = response.expires_in;
           const expiresAt = Date.now() + expiresIn * 1000;
-
-          localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({
-            accessToken: token,
-            expiresAt
-          }));
-          
+          localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({ accessToken: token, expiresAt }));
           setAccessToken(token);
           setIsLoggedIn(true);
           showToast('Google 계정으로 로그인했습니다.', 'success');
           resolve();
         };
-
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } catch (err) {
         reject(err);
@@ -154,7 +142,6 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setConflictError(null);
 
     try {
-      // 1. Check for Conflict (unless forced)
       const metadata = await googleDriveService.getBackupMetadata(accessToken, BACKUP_FILE_NAME);
       const deviceId = localStorage.getItem(DEVICE_ID_KEY) || 'unknown';
       const lastSyncTime = localStorage.getItem(SYNC_TIME_KEY);
@@ -163,44 +150,29 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (!force && metadata && metadata.appProperties) {
         const remoteTimestamp = metadata.appProperties.timestamp;
         const remoteDeviceId = metadata.appProperties.deviceId;
-
-        // If remote is newer than our last sync time, AND it was NOT uploaded by us
         if (lastSyncTime && new Date(remoteTimestamp).getTime() > new Date(lastSyncTime).getTime() + 1000 && remoteDeviceId !== deviceId) {
-          console.warn('Conflict detected');
           setConflictError({ local: lastSyncTime, remote: remoteTimestamp });
           showToast('데이터 충돌이 발생했습니다. 해결이 필요합니다.', 'error', 5000);
           setIsSyncing(false);
-          return; // Stop upload
+          return;
         }
       }
 
-      // 2. Prepare Data
-      const data = { 
-        students, 
-        records, 
-        todos, 
-        timestamp: currentTimestamp // Payload timestamp
-      };
+      const data = localStorageService.getAllData();
+      const appProperties = { timestamp: currentTimestamp, deviceId, version: '2.0' };
 
-      const appProperties = {
-        timestamp: currentTimestamp,
-        deviceId: deviceId,
-        version: '1.0'
-      };
-
-      // 3. Upload
       if (metadata && metadata.id) {
         await googleDriveService.updateBackupFile(accessToken, metadata.id, data, appProperties);
       } else {
         await googleDriveService.createBackupFile(accessToken, BACKUP_FILE_NAME, data, appProperties);
       }
       
-      // 4. Update State
       const nowStr = new Date().toLocaleString();
       setLastSync(nowStr);
       localStorage.setItem(SYNC_TIME_KEY, currentTimestamp);
       setPendingChanges(false);
-      showToast('데이터를 Google Drive에 백업했습니다.', 'success');
+      lastSavedData.current = JSON.stringify(data); // Update reference
+      showToast('전체 데이터를 Google Drive에 백업했습니다.', 'success');
 
     } catch (err: any) {
       if (err.message && err.message.includes('401')) {
@@ -214,18 +186,15 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       setIsSyncing(false);
     }
-  }, [isLoggedIn, accessToken, students, records, todos, handleLogout, showToast]);
+  }, [isLoggedIn, accessToken, handleLogout, showToast]);
 
-  // Auto Sync Logic - using uploadData from closure
   useEffect(() => {
     if (autoSync && pendingChanges && isLoggedIn && !isSyncing && !conflictError) {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-      
-      syncTimeoutRef.current = setTimeout(() => {
+      syncTimeoutRef.current = window.setTimeout(() => {
         uploadData();
       }, 30000); // 30 seconds debounce
     }
-
     return () => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     };
@@ -245,24 +214,16 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
       
       const data = await googleDriveService.downloadBackupFile(accessToken, metadata.id);
       
-      // Prevent marking this restoration as a new change
-      isRestoring.current = true;
-
-      // Update local context
-      if (data.records && Array.isArray(data.records)) {
-        data.records.forEach((r: any) => saveCurrentRecord(r));
+      if (data.classes && data.classData) {
+        localStorageService.saveAllData(data);
+        const remoteTimestamp = metadata.appProperties?.timestamp || new Date().toISOString();
+        localStorage.setItem(SYNC_TIME_KEY, remoteTimestamp);
+        setLastSync(new Date(remoteTimestamp).toLocaleString());
+        showToast('클라우드 데이터를 성공적으로 복구했습니다. 앱을 새로고침합니다.', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        throw new Error('다운로드한 파일 형식이 올바르지 않습니다.');
       }
-      if (data.students && Array.isArray(data.students)) {
-         manageStudents(data.students);
-      }
-      if (data.todos && Array.isArray(data.todos)) {
-        updateTodos(data.todos);
-      }
-
-      const remoteTimestamp = metadata.appProperties?.timestamp || new Date().toISOString();
-      localStorage.setItem(SYNC_TIME_KEY, remoteTimestamp);
-      setLastSync(new Date(remoteTimestamp).toLocaleString());
-      showToast('클라우드 데이터를 성공적으로 가져왔습니다.', 'success');
     } catch (err: any) {
       if (err.message && err.message.includes('401')) {
         setError('인증이 만료되었습니다. 다시 로그인해주세요.');
@@ -275,32 +236,22 @@ export const GoogleDriveProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       setIsSyncing(false);
     }
-  }, [isLoggedIn, accessToken, saveCurrentRecord, updateTodos, manageStudents, handleLogout, showToast]);
+  }, [isLoggedIn, accessToken, handleLogout, showToast]);
 
   const resolveConflict = useCallback((action: 'local' | 'remote') => {
     if (action === 'local') {
-      uploadData(true); // Force upload
+      uploadData(true);
     } else {
-      downloadData(); // Overwrite local
+      downloadData();
     }
     setConflictError(null);
   }, [uploadData, downloadData]);
 
   return (
     <GoogleDriveContext.Provider value={{
-      isLoggedIn,
-      isSyncing,
-      lastSync,
-      error,
-      pendingChanges,
-      autoSync,
-      conflictError,
-      handleLogin,
-      handleLogout,
-      uploadData,
-      downloadData,
-      setAutoSync,
-      resolveConflict
+      isLoggedIn, isSyncing, lastSync, error, pendingChanges, autoSync,
+      conflictError, handleLogin, handleLogout, uploadData, downloadData,
+      setAutoSync, resolveConflict
     }}>
       {children}
     </GoogleDriveContext.Provider>
