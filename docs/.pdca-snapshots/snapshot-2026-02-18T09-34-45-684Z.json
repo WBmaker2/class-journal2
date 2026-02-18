@@ -1,8 +1,0 @@
-{
-  "primaryFeature": "multi-class-support",
-  "status": "analyze",
-  "matchRate": 100,
-  "timestamp": "2026-02-18T09:35:00Z",
-  "_snapshotTimestamp": "2026-02-18T09:34:45.686Z",
-  "_reason": "pre-compress"
-}

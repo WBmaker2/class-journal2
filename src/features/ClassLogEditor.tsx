@@ -171,17 +171,23 @@ export const ClassLogEditor: React.FC = () => {
              <div 
                key={record.date} 
                id={`pdf-log-${record.date}`}
-               className="bg-white p-10 mb-8 border border-gray-100"
-               style={{ width: '800px', minHeight: '1100px' }}
+               className="bg-white p-10 mb-8"
+               style={{ 
+                 width: '800px', 
+                 minHeight: '1100px',
+                 backgroundColor: '#ffffff',
+                 color: '#111827'
+               }}
              >
-                <div className="flex justify-between items-center border-b-2 border-blue-600 pb-4 mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">{record.date}</h3>
-                  <div className="text-sm font-medium text-blue-600 space-x-4 bg-blue-50 px-4 py-1 rounded-full">
+                <div className="flex justify-between items-center pb-4 mb-6" style={{ borderBottom: '2px solid #2563eb' }}>
+                  <h3 className="text-2xl font-bold" style={{ color: '#111827' }}>{record.date}</h3>
+                  <div className="text-sm font-medium px-4 py-1 rounded-full" style={{ color: '#2563eb', backgroundColor: '#eff6ff' }}>
                     <span>날씨: {record.weather}</span>
+                    <span style={{ margin: '0 8px' }}>|</span>
                     <span>분위기: {record.atmosphere}</span>
                   </div>
                 </div>
-                <div className="whitespace-pre-wrap text-base leading-relaxed text-gray-800 bg-gray-50/50 p-6 rounded-xl border border-gray-100 min-h-[400px]">
+                <div className="whitespace-pre-wrap text-base leading-relaxed p-6 rounded-xl" style={{ backgroundColor: '#f9fafb', color: '#374151', minHeight: '400px' }}>
                   {record.classLog}
                 </div>
              </div>

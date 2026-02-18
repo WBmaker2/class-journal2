@@ -223,24 +223,29 @@ export const StudentCumulativeRecord: React.FC = () => {
                key={summary.student.id} 
                id={`pdf-student-${summary.student.id}`}
                className="bg-white p-10 mb-8"
-               style={{ width: '800px', minHeight: '1100px' }}
+               style={{ 
+                 width: '800px', 
+                 minHeight: '1100px',
+                 backgroundColor: '#ffffff',
+                 color: '#111827'
+               }}
              >
-                <div className="border-b-2 border-gray-800 pb-4 mb-8">
-                  <h3 className="text-3xl font-bold text-gray-900">
-                    <span className="text-gray-400 mr-4">{summary.student.number}번</span>
+                <div className="pb-4 mb-8" style={{ borderBottom: '2px solid #111827' }}>
+                  <h3 className="text-3xl font-bold">
+                    <span style={{ color: '#9ca3af', marginRight: '16px' }}>{summary.student.number}번</span>
                     {summary.student.name}
                   </h3>
-                  <p className="text-sm font-medium text-gray-500 mt-2 bg-gray-100 px-4 py-1 rounded-full w-fit">
+                  <p className="text-sm font-medium mt-2 px-4 py-1 rounded-full w-fit" style={{ color: '#6b7280', backgroundColor: '#f3f4f6' }}>
                     조회 기간: {startDate} ~ {endDate}
                   </p>
                 </div>
                 <div className="space-y-6">
                   {summary.entries.map((entry) => (
-                    <div key={`${summary.student.id}-${entry.date}`} className="flex gap-6 border-l-4 border-blue-500 pl-6 py-2 bg-blue-50/30 rounded-r-xl">
-                      <div className="w-28 shrink-0 text-sm font-bold text-blue-600 pt-1">
+                    <div key={`${summary.student.id}-${entry.date}`} className="flex gap-6 py-2 rounded-r-xl" style={{ borderLeft: '4px solid #3b82f6', paddingLeft: '24px', backgroundColor: 'rgba(239, 246, 255, 0.3)' }}>
+                      <div className="w-28 shrink-0 text-sm font-bold pt-1" style={{ color: '#2563eb' }}>
                         {entry.date}
                       </div>
-                      <div className="flex-1 text-gray-900 text-base leading-relaxed">
+                      <div className="flex-1 text-base leading-relaxed" style={{ color: '#111827' }}>
                         {entry.note}
                       </div>
                     </div>
