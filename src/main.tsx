@@ -9,14 +9,14 @@ import { ClassProvider } from './context/ClassContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClassProvider>
-      <JournalProvider>
-        <ToastProvider>
-          <SupabaseProvider>
+    <ToastProvider>
+      <SupabaseProvider>
+        <ClassProvider>
+          <JournalProvider>
             <App />
-          </SupabaseProvider>
-        </ToastProvider>
-      </JournalProvider>
-    </ClassProvider>
+          </JournalProvider>
+        </ClassProvider>
+      </SupabaseProvider>
+    </ToastProvider>
   </StrictMode>,
 )
