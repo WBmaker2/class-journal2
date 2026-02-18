@@ -120,15 +120,17 @@ export const StudentCumulativeRecord: React.FC = () => {
     setExportMode(null);
   };
 
-  const handleBatchExport = async () => {
-    setIsExporting(true);
-    setTimeout(async () => {
+  useEffect(() => {
+    if (!isExporting) return;
+
+    const performExport = async () => {
       const summaries = getStudentSummaries();
       const elementIds = summaries.map(s => `pdf-student-${s.student.id}`);
       
       if (elementIds.length === 0) {
         alert('선택한 기간에 기록된 내용이 없습니다.');
         setIsExporting(false);
+        setExportMode(null);
         return;
       }
 
@@ -139,7 +141,16 @@ export const StudentCumulativeRecord: React.FC = () => {
       
       setIsExporting(false);
       setExportMode(null);
-    }, 500);
+    };
+
+    // Use a short timeout to ensure the DOM has updated
+    const timer = setTimeout(performExport, 100);
+
+    return () => clearTimeout(timer);
+  }, [isExporting]);
+
+  const handleBatchExport = () => {
+    setIsExporting(true);
   };
 
   return (
