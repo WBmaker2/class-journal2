@@ -134,8 +134,6 @@ export const SettingsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <ClassManager />
-      <SubjectManager />
       <Card>
         <CardHeader 
           title="Google Drive 연동 설정" 
@@ -327,6 +325,9 @@ export const SettingsManager: React.FC = () => {
           </p>
         </CardContent>
       </Card>
+
+      <ClassManager />
+      <SubjectManager />
     </div>
   );
 };
