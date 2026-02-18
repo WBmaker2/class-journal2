@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Calendar, FileSpreadsheet } from 'lucide-react';
 import { useJournal } from '../context/JournalContext';
+import { useToast } from '../context/ToastContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -10,6 +11,7 @@ import type { DailyRecord } from '../types';
 
 export const ClassLogEditor: React.FC = () => {
   const { currentDate, records, saveCurrentRecord, students } = useJournal();
+  const { showToast } = useToast();
   const [log, setLog] = useState('');
   const [exportMode, setExportMode] = useState<'pdf' | 'excel' | null>(null);
   const [startDate, setStartDate] = useState(currentDate);
@@ -62,7 +64,7 @@ export const ClassLogEditor: React.FC = () => {
   const handleExcelExport = () => {
     const sortedRecords = getSortedRecords();
     if (sortedRecords.length === 0) {
-      alert('선택한 기간에 기록된 일지가 없습니다.');
+      showToast('선택한 기간에 기록된 일지가 없습니다.', 'error');
       return;
     }
 
@@ -89,26 +91,32 @@ export const ClassLogEditor: React.FC = () => {
       const elementIds = sortedRecords.map(r => `pdf-log-${r.date}`);
       
       if (elementIds.length === 0) {
-        alert('선택한 기간에 기록된 일지가 없습니다.');
+        showToast('선택한 기간에 기록된 일지가 없습니다.', 'error');
         setIsExporting(false);
         setExportMode(null);
         return;
       }
 
-      await exportBatchToPDF({
+      const success = await exportBatchToPDF({
         elementIds,
         filename: `학급일지_${startDate}_${endDate}`
       });
       
+      if (success) {
+        showToast('PDF 파일이 생성되었습니다.', 'success');
+      } else {
+        showToast('PDF 생성 중 오류가 발생했습니다.', 'error');
+      }
+
       setIsExporting(false);
       setExportMode(null);
     };
 
     // Use a short timeout to ensure the DOM has updated
-    const timer = setTimeout(performExport, 100);
+    const timer = setTimeout(performExport, 300);
 
     return () => clearTimeout(timer);
-  }, [isExporting]);
+  }, [isExporting, startDate, endDate, exportBatchToPDF, showToast]);
   
   const handleBatchExport = () => {
       setIsExporting(true);
@@ -157,24 +165,22 @@ export const ClassLogEditor: React.FC = () => {
 
       {/* Hidden Render Area for Batch Export */}
       {isExporting && (
-        <div className="fixed top-0 left-0 opacity-0 pointer-events-none -z-10">
-           {/* Render all records in range */}
+        <div className="fixed top-0 left-[-9999px] pointer-events-none" style={{ zIndex: -100 }}>
            {getSortedRecords().map((record) => (
              <div 
                key={record.date} 
                id={`pdf-log-${record.date}`}
-               className="bg-white p-6 border-b border-gray-300 mb-4"
-               style={{ width: '800px' }}
+               className="bg-white p-10 mb-8 border border-gray-100"
+               style={{ width: '800px', minHeight: '1100px' }}
              >
-                <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
-                  <h3 className="text-xl font-bold text-gray-800">{record.date}</h3>
-                  <div className="text-sm text-gray-500 space-x-3">
-                    <span>{record.weather}</span>
-                    <span>|</span>
-                    <span>{record.atmosphere}</span>
+                <div className="flex justify-between items-center border-b-2 border-blue-600 pb-4 mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900">{record.date}</h3>
+                  <div className="text-sm font-medium text-blue-600 space-x-4 bg-blue-50 px-4 py-1 rounded-full">
+                    <span>날씨: {record.weather}</span>
+                    <span>분위기: {record.atmosphere}</span>
                   </div>
                 </div>
-                <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 min-h-[100px]">
+                <div className="whitespace-pre-wrap text-base leading-relaxed text-gray-800 bg-gray-50/50 p-6 rounded-xl border border-gray-100 min-h-[400px]">
                   {record.classLog}
                 </div>
              </div>

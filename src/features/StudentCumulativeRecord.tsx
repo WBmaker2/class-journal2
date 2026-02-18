@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Calendar, FileSpreadsheet } from 'lucide-react';
 import { useJournal } from '../context/JournalContext';
+import { useToast } from '../context/ToastContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -10,6 +11,7 @@ import type { DailyRecord, Student } from '../types';
 
 export const StudentCumulativeRecord: React.FC = () => {
   const { currentDate, students, records, saveCurrentRecord } = useJournal();
+  const { showToast } = useToast();
   const [studentNotes, setStudentNotes] = useState<Record<string, string>>({});
   
   // Export states
@@ -89,7 +91,7 @@ export const StudentCumulativeRecord: React.FC = () => {
   const handleExcelExport = () => {
     const summaries = getStudentSummaries();
     if (summaries.length === 0) {
-      alert('선택한 기간에 기록된 내용이 없습니다.');
+      showToast('선택한 기간에 기록된 내용이 없습니다.', 'error');
       return;
     }
 
@@ -128,26 +130,31 @@ export const StudentCumulativeRecord: React.FC = () => {
       const elementIds = summaries.map(s => `pdf-student-${s.student.id}`);
       
       if (elementIds.length === 0) {
-        alert('선택한 기간에 기록된 내용이 없습니다.');
+        showToast('선택한 기간에 기록된 내용이 없습니다.', 'error');
         setIsExporting(false);
         setExportMode(null);
         return;
       }
 
-      await exportBatchToPDF({
+      const success = await exportBatchToPDF({
         elementIds,
         filename: `학생별누가기록_${startDate}_${endDate}`
       });
       
+      if (success) {
+        showToast('PDF 파일이 생성되었습니다.', 'success');
+      } else {
+        showToast('PDF 생성 중 오류가 발생했습니다.', 'error');
+      }
+
       setIsExporting(false);
       setExportMode(null);
     };
 
-    // Use a short timeout to ensure the DOM has updated
-    const timer = setTimeout(performExport, 100);
+    const timer = setTimeout(performExport, 300);
 
     return () => clearTimeout(timer);
-  }, [isExporting]);
+  }, [isExporting, startDate, endDate, exportBatchToPDF, showToast]);
 
   const handleBatchExport = () => {
     setIsExporting(true);
@@ -209,30 +216,30 @@ export const StudentCumulativeRecord: React.FC = () => {
 
       {/* Hidden Render Area for Batch Export */}
       {isExporting && (
-        <div className="fixed top-0 left-0 opacity-0 pointer-events-none -z-10">
+        <div className="fixed top-0 left-[-9999px] pointer-events-none" style={{ zIndex: -100 }}>
            {getStudentSummaries().map((summary) => (
              <div 
                key={summary.student.id} 
                id={`pdf-student-${summary.student.id}`}
-               className="bg-white p-8 border-b border-gray-300 mb-4"
-               style={{ width: '800px' }}
+               className="bg-white p-10 mb-8"
+               style={{ width: '800px', minHeight: '1100px' }}
              >
-                <div className="border-b-2 border-gray-800 pb-4 mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    <span className="text-gray-500 mr-2">{summary.student.number}번</span>
+                <div className="border-b-2 border-gray-800 pb-4 mb-8">
+                  <h3 className="text-3xl font-bold text-gray-900">
+                    <span className="text-gray-400 mr-4">{summary.student.number}번</span>
                     {summary.student.name}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    기간: {startDate} ~ {endDate}
+                  <p className="text-sm font-medium text-gray-500 mt-2 bg-gray-100 px-4 py-1 rounded-full w-fit">
+                    조회 기간: {startDate} ~ {endDate}
                   </p>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {summary.entries.map((entry) => (
-                    <div key={`${summary.student.id}-${entry.date}`} className="flex gap-4">
-                      <div className="w-24 shrink-0 text-sm font-bold text-gray-500 pt-1">
+                    <div key={`${summary.student.id}-${entry.date}`} className="flex gap-6 border-l-4 border-blue-500 pl-6 py-2 bg-blue-50/30 rounded-r-xl">
+                      <div className="w-28 shrink-0 text-sm font-bold text-blue-600 pt-1">
                         {entry.date}
                       </div>
-                      <div className="flex-1 text-gray-900 bg-gray-50 p-3 rounded-lg text-sm leading-relaxed">
+                      <div className="flex-1 text-gray-900 text-base leading-relaxed">
                         {entry.note}
                       </div>
                     </div>

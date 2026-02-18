@@ -7,19 +7,21 @@ interface PDFExportOptions {
 }
 
 export const usePDFExport = () => {
-  const exportToPDF = async ({ filename, elementId }: PDFExportOptions): Promise<void> => {
+  const exportToPDF = async ({ filename, elementId }: PDFExportOptions): Promise<boolean> => {
     const element = document.getElementById(elementId);
     if (!element) {
       console.error(`Element with id ${elementId} not found`);
-      return;
+      return false;
     }
 
     try {
       const canvas = await html2canvas(element, {
-        scale: 2, // For better quality
+        scale: 2,
         useCORS: true,
-        logging: true, // Enable logging for debugging
-        backgroundColor: '#ffffff'
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -27,30 +29,28 @@ export const usePDFExport = () => {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const canvasAspectRatio = canvasWidth / canvasHeight;
-      
-      let imgWidth = pdfWidth;
+      const canvasAspectRatio = canvas.width / canvas.height;
+      let imgWidth = pdfWidth - 20; // 10mm margin each side
       let imgHeight = imgWidth / canvasAspectRatio;
 
-      if (imgHeight > pdfHeight) {
-        imgHeight = pdfHeight;
+      if (imgHeight > pdfHeight - 20) {
+        imgHeight = pdfHeight - 20;
         imgWidth = imgHeight * canvasAspectRatio;
       }
       
       const xOffset = (pdfWidth - imgWidth) / 2;
-      const yOffset = (pdfHeight - imgHeight) / 2;
+      const yOffset = 10;
 
       pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
       pdf.save(`${filename}.pdf`);
-
+      return true;
     } catch (error) {
       console.error('Error generating PDF:', error);
+      return false;
     }
   };
 
-  const exportBatchToPDF = async ({ elementIds, filename }: { elementIds: string[]; filename: string }): Promise<void> => {
+  const exportBatchToPDF = async ({ elementIds, filename }: { elementIds: string[]; filename: string }): Promise<boolean> => {
      try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -59,30 +59,38 @@ export const usePDFExport = () => {
       const contentWidth = pageWidth - margin * 2;
       let currentY = margin;
 
-      for (const id of elementIds) {
+      for (let i = 0; i < elementIds.length; i++) {
+        const id = elementIds[i];
         const element = document.getElementById(id);
-        if (!element) continue;
+        if (!element) {
+          console.warn(`Element ${id} not found, skipping...`);
+          continue;
+        }
 
         const canvas = await html2canvas(element, {
           scale: 2,
-          backgroundColor: '#ffffff'
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
         });
 
         const imgData = canvas.toDataURL('image/png');
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
-        if (currentY + imgHeight > pageHeight - margin && currentY > margin) {
+        if (currentY + imgHeight > pageHeight - margin && i > 0) {
           pdf.addPage();
           currentY = margin;
         }
 
         pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
-        currentY += imgHeight + 5; // Add some space
+        currentY += imgHeight + 10;
       }
 
       pdf.save(`${filename}.pdf`);
+      return true;
     } catch (error) {
       console.error('Error generating batch PDF:', error);
+      return false;
     }
   };
 
