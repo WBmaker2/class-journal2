@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { localStorageService } from '../services/localStorage';
+import { useSupabase } from './SupabaseContext';
 import type { Class, Timetable, TimetableTemplate, Subject } from '../types';
 
 interface ClassContextType {
@@ -30,6 +31,7 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isLoading, setIsLoading] = useState(true);
   const [templates, setTemplates] = useState<TimetableTemplate[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const { markAsDirty } = useSupabase();
 
   useEffect(() => {
     localStorageService.runMigration();
@@ -49,6 +51,7 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setActiveClassId = (id: string | null) => {
     setActiveClassIdState(id);
     localStorageService.saveActiveClassId(id);
+    markAsDirty();
   };
 
   const addClass = (name: string) => {
@@ -63,12 +66,14 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!activeClassId) {
         setActiveClassId(newClass.id);
     }
+    markAsDirty();
   };
 
   const updateClass = (id: string, name: string) => {
     const updatedClasses = classes.map(c => c.id === id ? { ...c, name } : c);
     setClasses(updatedClasses);
     localStorageService.saveClasses(updatedClasses);
+    markAsDirty();
   };
 
   const deleteClass = (id: string) => {
@@ -81,12 +86,14 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const newActiveClassId = updatedClasses.length > 0 ? updatedClasses[0].id : null;
         setActiveClassId(newActiveClassId);
     }
+    markAsDirty();
   };
 
   const reorderClasses = (newlyOrderedClasses: Class[]) => {
     const updatedClasses = newlyOrderedClasses.map((c, index) => ({ ...c, order: index }));
     setClasses(updatedClasses);
     localStorageService.saveClasses(updatedClasses);
+    markAsDirty();
   };
 
   const saveTemplate = (name: string, data: Timetable) => {
@@ -98,18 +105,21 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
     localStorageService.saveTemplates(updatedTemplates);
+    markAsDirty();
   };
 
   const deleteTemplate = (id: string) => {
     const updatedTemplates = templates.filter(t => t.id !== id);
     setTemplates(updatedTemplates);
     localStorageService.saveTemplates(updatedTemplates);
+    markAsDirty();
   };
 
   const updateTimetable = (classId: string, timetable: Timetable) => {
     const updatedClasses = classes.map(c => c.id === classId ? { ...c, timetable } : c);
     setClasses(updatedClasses);
     localStorageService.updateClassTimetable(classId, timetable);
+    markAsDirty();
   };
 
   const addSubject = (name: string) => {
@@ -121,24 +131,28 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedSubjects = [...subjects, newSubject];
     setSubjects(updatedSubjects);
     localStorageService.saveSubjects(updatedSubjects);
+    markAsDirty();
   };
 
   const updateSubject = (id: string, name: string) => {
     const updatedSubjects = subjects.map(s => s.id === id ? { ...s, name } : s);
     setSubjects(updatedSubjects);
     localStorageService.saveSubjects(updatedSubjects);
+    markAsDirty();
   };
 
   const deleteSubject = (id: string) => {
     const updatedSubjects = subjects.filter(s => s.id !== id);
     setSubjects(updatedSubjects);
     localStorageService.saveSubjects(updatedSubjects);
+    markAsDirty();
   };
 
   const reorderSubjects = (newlyOrderedSubjects: Subject[]) => {
     const updatedSubjects = newlyOrderedSubjects.map((s, index) => ({ ...s, order: index }));
     setSubjects(updatedSubjects);
     localStorageService.saveSubjects(updatedSubjects);
+    markAsDirty();
   };
 
   return (

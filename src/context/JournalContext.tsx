@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Student, DailyRecord, TodoItem } from '../types';
 import { localStorageService } from '../services/localStorage';
 import { DUMMY_STUDENTS } from '../services/dummyData';
-import { useClass } from './ClassContext'; // Import useClass
+import { useClass } from './ClassContext'; 
+import { useSupabase } from './SupabaseContext';
 
 interface JournalContextType {
   currentDate: string;
@@ -20,6 +21,7 @@ const JournalContext = createContext<JournalContextType | undefined>(undefined);
 
 export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { activeClassId, isLoading: isClassLoading } = useClass();
+  const { markAsDirty } = useSupabase();
 
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -58,18 +60,21 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!activeClassId) return;
     localStorageService.saveRecord(activeClassId, record);
     setRecords(localStorageService.getAllRecords(activeClassId));
+    markAsDirty();
   };
 
   const updateTodos = (newTodos: TodoItem[]) => {
     if (!activeClassId) return;
     localStorageService.saveTodos(activeClassId, newTodos);
     setTodos(newTodos);
+    markAsDirty();
   };
 
   const manageStudents = (newStudents: Student[]) => {
     if (!activeClassId) return;
     localStorageService.saveStudents(activeClassId, newStudents);
     setStudents(newStudents);
+    markAsDirty();
   };
 
   return (
