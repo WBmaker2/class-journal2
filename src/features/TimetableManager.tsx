@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Save, Copy, Trash2, Clock, Plus, Minus } from 'lucide-react';
-import type { Timetable, TimetableCell } from '../types';
+import { Save, Copy, Trash2, Plus, Minus } from 'lucide-react';
+import type { Timetable } from '../types';
 
 const DAYS = ['월', '화', '수', '목', '금'];
 const SUBJECTS = ['국어', '수학', '사회', '과학', '영어', '음악', '미술', '체육', '도덕', '실과', '창체', '자치', '동아리'];
