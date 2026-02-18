@@ -15,8 +15,8 @@ export const SyncStatusIndicator: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium border transition-colors ${
+    <div className="flex flex-col items-end gap-1">
+      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium border transition-colors whitespace-nowrap ${
         isSyncing 
           ? 'bg-blue-50 text-blue-600 border-blue-200' 
           : 'bg-green-50 text-green-600 border-green-200'
@@ -26,10 +26,10 @@ export const SyncStatusIndicator: React.FC = () => {
         ) : (
           <Cloud size={12} />
         )}
-        <span>{isSyncing ? '동기화 중...' : '동기화 완료'}</span>
+        <span>{isSyncing ? '클라우드 동기화 중...' : '클라우드 동기화 완료'}</span>
       </div>
       {lastSync && (
-        <span className="text-[10px] text-gray-400 hidden sm:inline">
+        <span className="text-[10px] text-gray-400 whitespace-nowrap">
           최근: {lastSync}
         </span>
       )}
