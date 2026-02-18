@@ -15,7 +15,7 @@ export const SyncStatusIndicator: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1">
       <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium border transition-colors whitespace-nowrap ${
         isSyncing 
           ? 'bg-blue-50 text-blue-600 border-blue-200' 
