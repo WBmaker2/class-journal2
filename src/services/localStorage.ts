@@ -96,6 +96,13 @@ export const localStorageService = {
     return localStorageService.getClassData(classId).records;
   },
 
+  saveRecords: (classId: string, newRecords: DailyRecord[]) => {
+    const data = localStorageService.getAllData();
+    if (!data.classData[classId]) data.classData[classId] = { students: [], records: [], todos: [] };
+    data.classData[classId].records = newRecords;
+    localStorageService.saveAllData(data);
+  },
+
   // Students
   saveStudents: (classId: string, students: Student[]) => {
     const data = localStorageService.getAllData();
