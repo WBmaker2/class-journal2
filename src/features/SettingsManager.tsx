@@ -10,7 +10,7 @@ import { useSupabase } from '../context/SupabaseContext';
 
 export const SettingsManager: React.FC = () => {
   const { showToast } = useToast();
-  const { user, isLoggedIn, isSyncing, lastSync, signIn, signOut, syncData, securityKey, setSecurityKey } = useSupabase();
+  const { user, isLoggedIn, isSyncing, lastSync, signIn, signOut, uploadData, downloadData, securityKey, setSecurityKey } = useSupabase();
 
   const handleResetSecurityKey = () => {
     if (confirm('현재 세션의 보안 비밀번호를 초기화하시겠습니까? (서버 데이터는 삭제되지 않으며, 다시 입력해야 합니다.)')) {
@@ -137,20 +137,31 @@ export const SettingsManager: React.FC = () => {
                   {isSyncing ? (
                     <RefreshCw size={20} className="text-blue-500 animate-spin" />
                   ) : (
-                    <Button onClick={syncData} variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Button onClick={downloadData} variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <RefreshCw size={18} className="text-gray-400" />
                     </Button>
                   )}
                 </div>
                 
-                <Button 
-                  onClick={syncData} 
-                  disabled={isSyncing || !securityKey}
-                  className="h-full flex items-center justify-center gap-2"
-                >
-                  <CloudUpload size={18} />
-                  지금 즉시 백업
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={uploadData} 
+                    disabled={isSyncing || !securityKey}
+                    className="flex items-center justify-center gap-2 text-xs"
+                  >
+                    <CloudUpload size={16} />
+                    클라우드 백업
+                  </Button>
+                  <Button 
+                    onClick={downloadData} 
+                    disabled={isSyncing || !securityKey}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    <RefreshCw size={16} />
+                    클라우드 복구
+                  </Button>
+                </div>
               </div>
               
               {!securityKey && (

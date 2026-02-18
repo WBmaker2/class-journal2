@@ -15,7 +15,8 @@ interface SupabaseContextType {
   setSecurityKey: (key: string | null) => void;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
-  syncData: () => Promise<void>;
+  uploadData: () => Promise<void>;
+  downloadData: () => Promise<void>;
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -37,7 +38,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (!_event.includes('SIGNED_IN')) {
+      if (_event.includes('SIGNED_IN')) {
           setSecurityKey(null); // Clear key on logout
       }
     });
@@ -63,74 +64,77 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const syncData = useCallback(async () => {
-    if (!user) return;
+  const uploadData = async () => {
+    if (!user || !securityKey) {
+        showToast('로그인 및 보안 비밀번호 입력이 필요합니다.', 'error');
+        return;
+    }
     
-    // If we have cloud data but no security key, we can't sync.
-    // The UI should trigger the modal in this case.
-    if (!securityKey) {
-        // We trigger a check to see if cloud data exists
-        const cloudResult = await supabaseService.fetchUserData(user.id);
-        if (cloudResult) return; // Wait for key
+    setIsSyncing(true);
+    try {
+      const localData = localStorageService.getAllData();
+      const encryptedPayload = encryptionService.encrypt(localData, securityKey);
+      const encryptedForCloud = {
+          isEncrypted: true,
+          payload: encryptedPayload,
+          updatedAt: new Date().toISOString()
+      };
+      await supabaseService.upsertUserData(user.id, encryptedForCloud);
+      setLastSync(new Date().toLocaleString());
+      showToast('로컬 데이터를 암호화하여 클라우드에 백업했습니다.', 'success');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      showToast('백업 중 오류가 발생했습니다.', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const downloadData = async () => {
+    if (!user || !securityKey) {
+        showToast('로그인 및 보안 비밀번호 입력이 필요합니다.', 'error');
+        return;
     }
 
     setIsSyncing(true);
     try {
       const cloudResult = await supabaseService.fetchUserData(user.id);
-      const localData = localStorageService.getAllData();
-      
-      if (cloudResult && securityKey) {
-        const encryptedData = cloudResult.data;
-        
-        // v3.1 Logic: Check if it's an encrypted format
-        if (encryptedData.isEncrypted) {
-            try {
-                const decrypted = encryptionService.decrypt(encryptedData.payload, securityKey);
-                localStorageService.saveAllData(decrypted);
-                setLastSync(new Date(cloudResult.updated_at).toLocaleString());
-                showToast('클라우드 데이터를 복호화하여 동기화했습니다.', 'success');
-            } catch (e) {
-                showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
-                setSecurityKey(null); // Force re-entry
-            }
-        } else {
-            // Migration from v3.0 (plain) to v3.1 (encrypted)
-            // If cloud is plain, we download it, then re-upload as encrypted
-            localStorageService.saveAllData(encryptedData);
-            const encryptedForCloud = {
-                isEncrypted: true,
-                payload: encryptionService.encrypt(encryptedData, securityKey),
-                updatedAt: new Date().toISOString()
-            };
-            await supabaseService.upsertUserData(user.id, encryptedForCloud);
-            showToast('기존 데이터를 암호화하여 클라우드에 업데이트했습니다.', 'success');
-        }
-      } else if (!cloudResult && securityKey) {
-        // First time cloud sync: Encrypt and Upload local data
-        const encryptedPayload = encryptionService.encrypt(localData, securityKey);
-        const encryptedForCloud = {
-            isEncrypted: true,
-            payload: encryptedPayload,
-            updatedAt: new Date().toISOString()
-        };
-        await supabaseService.upsertUserData(user.id, encryptedForCloud);
-        setLastSync(new Date().toLocaleString());
-        showToast('로컬 데이터를 암호화하여 클라우드에 백업했습니다.', 'success');
+      if (!cloudResult) {
+          showToast('클라우드에 저장된 데이터가 없습니다.', 'info');
+          return;
+      }
+
+      const encryptedData = cloudResult.data;
+      if (encryptedData.isEncrypted) {
+          try {
+              const decrypted = encryptionService.decrypt(encryptedData.payload, securityKey);
+              localStorageService.saveAllData(decrypted);
+              setLastSync(new Date(cloudResult.updated_at).toLocaleString());
+              showToast('클라우드 데이터를 성공적으로 복구했습니다.', 'success');
+              setTimeout(() => window.location.reload(), 1000);
+          } catch (e) {
+              showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
+          }
+      } else {
+          // Legacy plain data
+          localStorageService.saveAllData(encryptedData);
+          showToast('데이터를 복구했습니다 (암호화되지 않은 이전 버전).', 'info');
+          setTimeout(() => window.location.reload(), 1000);
       }
     } catch (error: any) {
-      console.error('Sync error:', error);
-      showToast('동기화 중 오류가 발생했습니다.', 'error');
+      console.error('Download error:', error);
+      showToast('복구 중 오류가 발생했습니다.', 'error');
     } finally {
       setIsSyncing(false);
     }
-  }, [user, securityKey, showToast]);
+  };
 
-  // Sync when key is provided
+  // Initial download on login
   useEffect(() => {
-    if (user && securityKey) {
-      syncData();
+    if (user && securityKey && !lastSync) {
+      downloadData();
     }
-  }, [user, securityKey, syncData]);
+  }, [user, securityKey, lastSync]);
 
   return (
     <SupabaseContext.Provider value={{
@@ -143,7 +147,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSecurityKey,
       signIn,
       signOut,
-      syncData
+      uploadData,
+      downloadData
     }}>
       {children}
     </SupabaseContext.Provider>
