@@ -32,7 +32,7 @@ function App() {
         <div className="mb-8 px-2">
           <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
             <BookOpen size={24} />
-            학급 일지 (중등, 전담)
+            우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v2</span>
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
@@ -82,7 +82,7 @@ function App() {
            <div className="flex items-center justify-between">
              <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
                <BookOpen size={24} />
-               학급 일지 (중등, 전담)
+               우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v2</span>
              </h1>
              <SyncStatusIndicator />
            </div>
