@@ -165,7 +165,9 @@ export const SettingsManager: React.FC = () => {
                   <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">https://class-journal.vercel.app</code>
                   <span className="text-xs text-blue-600">(마지막에 '/'가 없어야 합니다)</span>
                 </li>
-                <li>저장 후 <strong>Client ID</strong>를 복사하여 아래에 입력하세요.</li>
+                <li>[API 및 서비스] - [사용설정된 API 및 서비스] 에서 <strong>'+API 및 서비스 사용 설정'</strong> 버튼을 클릭합니다. 'drive'를 검색 하고 <strong>'Google Drive API'</strong>를 선택 후 '사용' 버튼을 클릭합니다.</li>
+                <li>[API 및 서비스] - [OAuth 동의 화면] - 대상 화면에서 <strong>테스트 사용자</strong>에 본인 이메일 주소를 입력하여 추가합니다. 같은 페이지 위에 있는 <strong>'앱 게시'</strong> 버튼을 클릭합니다.</li>
+                <li>[API 및 서비스] - [사용자 인증 정보] - <strong>클라이언트 ID</strong>를 복사하여 아래에 입력하세요.</li>
                 <li><a href="https://goldenrabbit.co.kr/articles/p4esg2wuouyO0dTyDYGG" target="_blank" rel="noreferrer" className="underline font-medium hover:text-blue-900 inline-flex items-center gap-1">
                     OAuth 2.0 클라이언트 ID 발급 방법 참고 자료<ExternalLink size={12} /></a>
                     <br /> ※ 승인된 자바스크립트 원본 주소는 꼭 위 안내된 주소를 입력하세요. 승인된 리디렉션 URI는 비워둡니다.</li>
