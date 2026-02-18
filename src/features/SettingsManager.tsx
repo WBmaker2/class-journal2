@@ -156,11 +156,9 @@ export const SettingsManager: React.FC = () => {
                     Google Cloud Console <ExternalLink size={12} />
                   </a>에 접속합니다. 새 프로젝트를 생성합니다.
                 </li>
-                <li>[API 및 서비스] &gt; [OAuth 동의 화면]으로 이동합니다. User Type '외부'선택 후 '만들기'를  클릭합니다.</li>
-                <li>[API 및 서비스] &gt; [사용자 인증 정보]로 이동합니다.</li>
-                <li><strong>OAuth 2.0 클라이언트 ID</strong>를 생성하고, 클릭하여 수정 화면으로 들어갑니다.</li>
+                <li>[API 및 서비스] &gt; [사용자 인증 정보]으로 이동합니다. <strong>'+ 사용자 인증정보 만들기 - OAuth 2.0 클라이언트 ID'</strong>를 선택합니다.</li>
                 <li>
-                  <strong>승인된 자바스크립트 원본</strong> 항목에 아래 주소를 <strong>반드시 추가</strong>하세요:
+                  애플리케이션 유형 - <strong>웹 애플리케이션</strong> 선택, <strong>승인된 자바스크립트 원본</strong> 항목에 아래 주소를 <strong>반드시 추가</strong>하세요:
                   <br />
                   <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono mt-1 block w-fit">https://class-journal.vercel.app</code>
                   <span className="text-xs text-blue-600">(마지막에 '/'가 없어야 합니다)</span>
