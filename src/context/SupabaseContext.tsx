@@ -21,13 +21,26 @@ interface SupabaseContextType {
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
 
+const SEC_KEY_STORAGE = 'cj_sec_session';
+
 export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<any>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  const [securityKey, setSecurityKey] = useState<string | null>(null);
+  const [securityKey, setSecurityKeyInternal] = useState<string | null>(() => {
+    return sessionStorage.getItem(SEC_KEY_STORAGE);
+  });
   const { showToast } = useToast();
+
+  const setSecurityKey = (key: string | null) => {
+    setSecurityKeyInternal(key);
+    if (key) {
+      sessionStorage.setItem(SEC_KEY_STORAGE, key);
+    } else {
+      sessionStorage.removeItem(SEC_KEY_STORAGE);
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
