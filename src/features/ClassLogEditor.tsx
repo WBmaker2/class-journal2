@@ -113,12 +113,13 @@ export const ClassLogEditor: React.FC = () => {
     };
 
     // Use a short timeout to ensure the DOM has updated
-    const timer = setTimeout(performExport, 300);
+    const timer = setTimeout(performExport, 500); // Increased delay for safety
 
     return () => clearTimeout(timer);
   }, [isExporting, startDate, endDate, exportBatchToPDF, showToast]);
   
   const handleBatchExport = () => {
+      showToast('PDF 생성을 시작합니다. 잠시만 기다려주세요...', 'info');
       setIsExporting(true);
   };
 
