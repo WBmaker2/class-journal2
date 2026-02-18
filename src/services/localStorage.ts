@@ -1,4 +1,4 @@
-import type { DailyRecord, Student, TodoItem, Class, TimetableTemplate } from '../types';
+import type { DailyRecord, Student, TodoItem, Class, TimetableTemplate, Subject } from '../types';
 
 const V1_KEYS = {
   RECORDS: 'cj_daily_records',
@@ -7,6 +7,8 @@ const V1_KEYS = {
 };
 
 const V2_KEY = 'cj_data';
+
+const DEFAULT_SUBJECTS = ['국어', '수학', '사회', '과학', '영어', '음악', '미술', '체육', '도덕', '실과', '창체', '자치', '동아리'];
 
 interface ClassData {
   students: Student[];
@@ -19,6 +21,7 @@ interface AppData {
   activeClassId: string | null;
   classData: Record<string, ClassData>;
   templates?: TimetableTemplate[];
+  subjects?: Subject[];
 }
 
 const getInitialData = (): AppData => ({
@@ -26,6 +29,11 @@ const getInitialData = (): AppData => ({
   activeClassId: null,
   classData: {},
   templates: [],
+  subjects: DEFAULT_SUBJECTS.map((name, index) => ({
+    id: `subject-${index}`,
+    name,
+    order: index
+  })),
 });
 
 export const localStorageService = {
@@ -159,6 +167,18 @@ export const localStorageService = {
   getTemplates: (): TimetableTemplate[] => {
     const data = localStorageService.getAllData();
     return data.templates || [];
+  },
+
+  // Subjects
+  saveSubjects: (subjects: Subject[]) => {
+    const data = localStorageService.getAllData();
+    data.subjects = subjects;
+    localStorageService.saveAllData(data);
+  },
+
+  getSubjects: (): Subject[] => {
+    const data = localStorageService.getAllData();
+    return data.subjects || [];
   },
 
   updateClassTimetable: (classId: string, timetable: any) => {

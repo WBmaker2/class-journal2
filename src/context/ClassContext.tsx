@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { localStorageService } from '../services/localStorage';
-import type { Class, Timetable, TimetableTemplate } from '../types';
+import type { Class, Timetable, TimetableTemplate, Subject } from '../types';
 
 interface ClassContextType {
   classes: Class[];
@@ -15,6 +15,11 @@ interface ClassContextType {
   saveTemplate: (name: string, data: Timetable) => void;
   deleteTemplate: (id: string) => void;
   updateTimetable: (classId: string, timetable: Timetable) => void;
+  subjects: Subject[];
+  addSubject: (name: string) => void;
+  updateSubject: (id: string, name: string) => void;
+  deleteSubject: (id: string) => void;
+  reorderSubjects: (subjects: Subject[]) => void;
 }
 
 const ClassContext = createContext<ClassContextType | undefined>(undefined);
@@ -24,12 +29,14 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeClassId, setActiveClassIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [templates, setTemplates] = useState<TimetableTemplate[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
   useEffect(() => {
     localStorageService.runMigration();
     const allData = localStorageService.getAllData();
     setClasses(allData.classes);
     setTemplates(allData.templates || []);
+    setSubjects(allData.subjects || []);
     const savedActiveClassId = allData.activeClassId;
     if (savedActiveClassId) {
       setActiveClassIdState(savedActiveClassId);
@@ -105,6 +112,35 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorageService.updateClassTimetable(classId, timetable);
   };
 
+  const addSubject = (name: string) => {
+    const newSubject: Subject = {
+      id: self.crypto.randomUUID(),
+      name,
+      order: subjects.length,
+    };
+    const updatedSubjects = [...subjects, newSubject];
+    setSubjects(updatedSubjects);
+    localStorageService.saveSubjects(updatedSubjects);
+  };
+
+  const updateSubject = (id: string, name: string) => {
+    const updatedSubjects = subjects.map(s => s.id === id ? { ...s, name } : s);
+    setSubjects(updatedSubjects);
+    localStorageService.saveSubjects(updatedSubjects);
+  };
+
+  const deleteSubject = (id: string) => {
+    const updatedSubjects = subjects.filter(s => s.id !== id);
+    setSubjects(updatedSubjects);
+    localStorageService.saveSubjects(updatedSubjects);
+  };
+
+  const reorderSubjects = (newlyOrderedSubjects: Subject[]) => {
+    const updatedSubjects = newlyOrderedSubjects.map((s, index) => ({ ...s, order: index }));
+    setSubjects(updatedSubjects);
+    localStorageService.saveSubjects(updatedSubjects);
+  };
+
   return (
     <ClassContext.Provider value={{ 
         classes, 
@@ -118,7 +154,12 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         templates,
         saveTemplate,
         deleteTemplate,
-        updateTimetable
+        updateTimetable,
+        subjects,
+        addSubject,
+        updateSubject,
+        deleteSubject,
+        reorderSubjects
     }}>
       {children}
     </ClassContext.Provider>

@@ -6,10 +6,9 @@ import { Save, Copy, Trash2, Plus, Minus } from 'lucide-react';
 import type { Timetable } from '../types';
 
 const DAYS = ['월', '화', '수', '목', '금'];
-const SUBJECTS = ['국어', '수학', '사회', '과학', '영어', '음악', '미술', '체육', '도덕', '실과', '창체', '자치', '동아리'];
 
 export const TimetableManager: React.FC = () => {
-  const { activeClassId, classes, updateTimetable, templates, saveTemplate, deleteTemplate } = useClass();
+  const { activeClassId, classes, updateTimetable, templates, saveTemplate, deleteTemplate, subjects } = useClass();
   const [editingTimetable, setEditingTimetable] = useState<Timetable>({ days: {} });
   const [maxPeriods, setMaxPeriods] = useState(6);
   const [newTemplateName, setNewTemplateName] = useState('');
@@ -120,7 +119,9 @@ export const TimetableManager: React.FC = () => {
                           className="w-full p-1 text-sm border-none focus:ring-1 focus:ring-blue-500 rounded"
                         >
                           <option value="">-</option>
-                          {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                          {subjects.sort((a,b) => a.order - b.order).map(s => (
+                            <option key={s.id} value={s.name}>{s.name}</option>
+                          ))}
                         </select>
                       </td>
                     ))}

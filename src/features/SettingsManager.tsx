@@ -5,7 +5,8 @@ import { Eye, EyeOff, Save, Lock, HelpCircle, ExternalLink, LogIn, LogOut, Cloud
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
 import { localStorageService } from '../services/localStorage';
 import { useToast } from '../context/ToastContext';
-import { ClassManager } from './ClassManager'; // Import ClassManager
+import { ClassManager } from './ClassManager';
+import { SubjectManager } from './SubjectManager';
 
 const STORAGE_KEY = 'cj_google_config';
 
@@ -134,6 +135,7 @@ export const SettingsManager: React.FC = () => {
   return (
     <div className="space-y-6">
       <ClassManager />
+      <SubjectManager />
       <Card>
         <CardHeader 
           title="Google Drive 연동 설정" 

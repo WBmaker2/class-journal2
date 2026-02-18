@@ -4,11 +4,9 @@ import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import type { DailyRecord, LessonLog } from '../types';
 
-const SUBJECTS = ['국어', '수학', '사회', '과학', '영어', '음악', '미술', '체육', '도덕', '실과', '창체'];
-
 export const LessonLogManager: React.FC = () => {
   const { currentDate, records, saveCurrentRecord, students } = useJournal();
-  const { activeClassId, classes } = useClass();
+  const { activeClassId, classes, subjects } = useClass();
   const [lessonLogs, setLessonLogs] = useState<LessonLog[]>([]);
 
   useEffect(() => {
@@ -75,7 +73,9 @@ export const LessonLogManager: React.FC = () => {
                   className="text-sm border-gray-200 rounded-md p-1"
                 >
                   <option value="">과목 선택</option>
-                  {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                  {subjects.sort((a,b) => a.order - b.order).map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
                 </select>
               </div>
               <input

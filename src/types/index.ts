@@ -62,6 +62,12 @@ export interface TimetableTemplate {
   data: Timetable;
 }
 
+export interface Subject {
+  id: string;
+  name: string;
+  order: number;
+}
+
 declare global {
   const gapi: any;
   const google: any;
