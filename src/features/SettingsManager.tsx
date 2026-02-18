@@ -128,7 +128,7 @@ export const SettingsManager: React.FC = () => {
               </div>
 
               {/* Sync Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
                 <div className="p-4 bg-white border border-gray-200 rounded-lg flex items-center justify-between">
                   <div className="space-y-1">
                     <p className="text-xs text-gray-400 font-medium uppercase">최근 동기화</p>
@@ -147,7 +147,7 @@ export const SettingsManager: React.FC = () => {
                   <Button 
                     onClick={uploadData} 
                     disabled={isSyncing || !securityKey}
-                    className="flex items-center justify-center gap-2 text-xs"
+                    className="h-full flex items-center justify-center gap-2 text-xs"
                   >
                     <CloudUpload size={16} />
                     클라우드 백업
@@ -156,7 +156,7 @@ export const SettingsManager: React.FC = () => {
                     onClick={downloadData} 
                     disabled={isSyncing || !securityKey}
                     variant="outline"
-                    className="flex items-center justify-center gap-2 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                    className="h-full flex items-center justify-center gap-2 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
                   >
                     <RefreshCw size={16} />
                     클라우드 복구
