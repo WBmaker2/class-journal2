@@ -8,7 +8,7 @@ const V1_KEYS = {
 
 const V2_KEY = 'cj_data';
 
-const DEFAULT_SUBJECTS = ['국어', '수학', '사회', '과학', '영어', '음악', '미술', '체육', '도덕', '실과', '창체', '자치', '동아리'];
+const DEFAULT_SUBJECTS = ['국어', '수학', '사회', '과학', '도덕', '영어', '음악', '미술', '체육', '창체'];
 
 interface ClassData {
   students: Student[];
@@ -57,7 +57,12 @@ export const localStorageService = {
             students,
             todos,
           }
-        }
+        },
+        subjects: DEFAULT_SUBJECTS.map((name, index) => ({
+          id: `subject-${index}`,
+          name,
+          order: index
+        })),
       };
       
       localStorage.setItem(V2_KEY, JSON.stringify(newData));
@@ -68,8 +73,22 @@ export const localStorageService = {
   },
   
   getAllData: (): AppData => {
-    const data = localStorage.getItem(V2_KEY);
-    return data ? JSON.parse(data) : getInitialData();
+    const dataStr = localStorage.getItem(V2_KEY);
+    if (!dataStr) return getInitialData();
+    
+    const data: AppData = JSON.parse(dataStr);
+    
+    // Ensure subjects are initialized even for existing v2 data
+    if (!data.subjects || data.subjects.length === 0) {
+      data.subjects = DEFAULT_SUBJECTS.map((name, index) => ({
+        id: `subject-${index}`,
+        name,
+        order: index
+      }));
+      localStorageService.saveAllData(data);
+    }
+    
+    return data;
   },
 
   saveAllData: (data: AppData) => {
