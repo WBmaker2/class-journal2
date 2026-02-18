@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader } from './Card';
+import { Card, CardContent } from './Card';
 import { Button } from './Button';
 import { ShieldAlert, Lock, Eye, EyeOff, Info } from 'lucide-react';
 import { useSupabase } from '../../context/SupabaseContext';
@@ -8,7 +8,6 @@ export const SecurityKeyModal: React.FC = () => {
   const { isLoggedIn, securityKey, setSecurityKey } = useSupabase();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
 
   // Only show if logged in but no security key
   if (!isLoggedIn || securityKey) return null;
