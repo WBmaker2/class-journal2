@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { JournalProvider } from './context/JournalContext'
-import { GoogleDriveProvider } from './context/GoogleDriveContext'
+import { SupabaseProvider } from './context/SupabaseContext'
 import { ToastProvider } from './context/ToastContext'
 import { ClassProvider } from './context/ClassContext'
 
@@ -12,9 +12,9 @@ createRoot(document.getElementById('root')!).render(
     <ClassProvider>
       <JournalProvider>
         <ToastProvider>
-          <GoogleDriveProvider>
+          <SupabaseProvider>
             <App />
-          </GoogleDriveProvider>
+          </SupabaseProvider>
         </ToastProvider>
       </JournalProvider>
     </ClassProvider>
