@@ -124,15 +124,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               localStorageService.saveAllData(decrypted);
               setLastSync(new Date(cloudResult.updated_at).toLocaleString());
               showToast('클라우드 데이터를 성공적으로 복구했습니다.', 'success');
-              setTimeout(() => window.location.reload(), 1000);
+              // window.location.reload() 제거 - 대신 Context 상위에서 데이터가 변경되었음을 알리거나 
+              // 자연스럽게 리렌더링되도록 유도 (필요시 새로고침 버튼 수동 노출)
           } catch (e) {
               showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
           }
       } else {
           // Legacy plain data
           localStorageService.saveAllData(encryptedData);
+          setLastSync(new Date(cloudResult.updated_at).toLocaleString());
           showToast('데이터를 복구했습니다 (암호화되지 않은 이전 버전).', 'info');
-          setTimeout(() => window.location.reload(), 1000);
       }
     } catch (error: any) {
       console.error('Download error:', error);
