@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 import { supabase, supabaseService } from '../services/supabase';
 import { localStorageService } from '../services/localStorage';
 import { useToast } from './ToastContext';
