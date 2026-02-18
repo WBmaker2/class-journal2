@@ -36,7 +36,7 @@ function App() {
         <div className="mb-8 px-2">
           <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
             <BookOpen size={24} />
-            우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.5</span>
+            우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.6</span>
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
@@ -80,16 +80,21 @@ function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
+      <main className="flex-1 p-2 md:p-8 overflow-y-auto h-screen">
         {/* Mobile Header */}
-        <header className="mb-6 md:hidden space-y-4">
-           <div className="flex items-center justify-between">
-             <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
-               <BookOpen size={24} />
-               우리 반 학급 일지 <span className="text-xs font-normal text-gray-400">v3.5</span>
+        <header className="mb-4 md:hidden space-y-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+           <div className="flex items-center justify-between gap-2">
+             <h1 className="text-base font-bold text-blue-600 flex items-center gap-1.5 min-w-0">
+               <BookOpen size={20} className="flex-shrink-0" />
+               <span className="truncate">우리 반 학급 일지</span>
+               <span className="text-[10px] font-normal text-gray-400 flex-shrink-0">v3.6</span>
              </h1>
-             <SyncStatusIndicator />
+             <div className="flex-shrink-0">
+               <SyncStatusIndicator />
+             </div>
            </div>
+           
+           <ClassSelector />
            
            {/* Global Date Picker (Mobile) */}
            <div className="relative">
@@ -97,13 +102,13 @@ function App() {
                type="date" 
                value={currentDate}
                onChange={(e) => setCurrentDate(e.target.value)}
-               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border pl-9"
+               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-1.5 border pl-9"
              />
              <Clock className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
            </div>
         </header>
 
-        <div className="max-w-4xl mx-auto pb-20 md:pb-0">
+        <div className="max-w-4xl mx-auto pb-24 md:pb-0">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'attendance' && <AttendanceTracker />}
           {activeTab === 'timetable' && <LessonLogManager />}

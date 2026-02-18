@@ -95,28 +95,28 @@ export const TimetableManager: React.FC = () => {
           subtitle="요일별 정규 수업 시간을 설정하세요. 설정된 시간표는 일지 작성 시 자동 반영됩니다." 
         />
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-[600px]">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table className="w-full border-collapse min-w-[500px] text-xs sm:text-sm">
               <thead>
                 <tr>
-                  <th className="border p-2 bg-gray-50 w-20">교시</th>
+                  <th className="border p-1 sm:p-2 bg-gray-50 w-10 sm:w-20">교시</th>
                   {DAYS.map((day, i) => (
-                    <th key={i} className="border p-2 bg-gray-50">{day}요일</th>
+                    <th key={i} className="border p-1 sm:p-2 bg-gray-50">{day}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: maxPeriods }, (_, i) => i + 1).map(period => (
                   <tr key={period}>
-                    <td className="border p-2 text-center font-bold text-blue-600 bg-gray-50">
+                    <td className="border p-1 sm:p-2 text-center font-bold text-blue-600 bg-gray-50">
                       {period}
                     </td>
                     {DAYS.map((_, dayIndex) => (
-                      <td key={dayIndex} className="border p-1">
+                      <td key={dayIndex} className="border p-0.5 sm:p-1">
                         <select
                           value={editingTimetable.days[dayIndex]?.[period]?.subject || ''}
                           onChange={(e) => handleCellChange(dayIndex, period, e.target.value)}
-                          className="w-full p-1 text-sm border-none focus:ring-1 focus:ring-blue-500 rounded"
+                          className="w-full p-1 text-[10px] sm:text-sm border-none focus:ring-1 focus:ring-blue-500 rounded bg-transparent"
                         >
                           <option value="">-</option>
                           {subjects.sort((a,b) => a.order - b.order).map(s => (

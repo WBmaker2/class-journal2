@@ -13,15 +13,15 @@ export const ClassSelector: React.FC = () => {
   }
 
   return (
-    <div className="p-2">
-      <label htmlFor="class-selector" className="block text-sm font-medium text-gray-700 mb-1">
+    <div className="p-1 md:p-2">
+      <label htmlFor="class-selector" className="block text-[10px] md:text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">
         학급 선택
       </label>
       <select
         id="class-selector"
         value={activeClassId || ''}
         onChange={(e) => setActiveClassId(e.target.value)}
-        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-1.5 md:p-2 border bg-white"
         disabled={classes.length === 0}
       >
         {classes.length === 0 && <option>학급을 추가해주세요</option>}
