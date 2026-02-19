@@ -29,12 +29,7 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  useEffect(() => {
-    if (isClassLoading) {
-        setIsDataLoaded(false);
-        return;
-    }
-
+  const loadJournalData = () => {
     if (activeClassId) {
       const savedStudents = localStorageService.getStudents(activeClassId);
       if (savedStudents.length === 0) {
@@ -54,6 +49,23 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setTodos([]);
       setIsDataLoaded(true);
     }
+  };
+
+  useEffect(() => {
+    if (isClassLoading) {
+        setIsDataLoaded(false);
+        return;
+    }
+
+    loadJournalData();
+
+    // Sync state when localStorage changes
+    const handleStorageChange = () => {
+      loadJournalData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [activeClassId, isClassLoading]);
 
   const saveCurrentRecord = (record: DailyRecord) => {

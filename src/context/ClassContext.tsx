@@ -33,8 +33,7 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const { markAsDirty } = useSupabase();
 
-  useEffect(() => {
-    localStorageService.runMigration();
+  const loadAllData = () => {
     const allData = localStorageService.getAllData();
     setClasses(allData.classes);
     setTemplates(allData.templates || []);
@@ -45,7 +44,20 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else if (allData.classes.length > 0) {
       setActiveClassIdState(allData.classes[0].id);
     }
+  };
+
+  useEffect(() => {
+    localStorageService.runMigration();
+    loadAllData();
     setIsLoading(false);
+
+    // Sync state when localStorage changes in other contexts (e.g. after cloud restore)
+    const handleStorageChange = () => {
+      loadAllData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const setActiveClassId = (id: string | null) => {
