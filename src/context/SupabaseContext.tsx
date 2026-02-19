@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase, supabaseService } from '../services/supabase';
 import { localStorageService } from '../services/localStorage';
@@ -36,6 +36,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastSyncTime, setLastSyncTime] = useState<number>(0);
   const [isDirty, setIsDirty] = useState(false);
   
+  // Prevent multiple downloads
+  const isDownloadingRef = useRef(false);
+
   // Conflict state
   const [showConflict, setShowConflict] = useState(false);
   const [remoteTimeStr, setRemoteTimeStr] = useState<string | null>(null);
@@ -155,8 +158,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const downloadData = async () => {
-    if (!user || !securityKey) return;
+    if (!user || !securityKey || isDownloadingRef.current) return;
 
+    isDownloadingRef.current = true;
     setIsSyncing(true);
     try {
       const cloudResult = await supabaseService.fetchUserData(user.id);
@@ -192,6 +196,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       showToast('복구 중 오류가 발생했습니다.', 'error');
     } finally {
       setIsSyncing(false);
+      isDownloadingRef.current = false;
     }
   };
 
