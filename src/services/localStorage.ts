@@ -207,5 +207,90 @@ export const localStorageService = {
       data.classes[classIdx].timetable = timetable;
       localStorageService.saveAllData(data);
     }
+  },
+
+  mergeAppData: (local: AppData, remote: AppData): AppData => {
+    const merged: AppData = { ...local };
+
+    // 1. Classes Merge
+    const localClassIds = new Set(local.classes.map(c => c.id));
+    remote.classes.forEach(rc => {
+      if (!localClassIds.has(rc.id)) {
+        merged.classes.push(rc);
+      }
+    });
+
+    // 2. ClassData Merge
+    const allClassIds = new Set([
+      ...Object.keys(local.classData),
+      ...Object.keys(remote.classData)
+    ]);
+
+    allClassIds.forEach(classId => {
+      const localCd = local.classData[classId];
+      const remoteCd = remote.classData[classId];
+
+      if (!localCd) {
+        merged.classData[classId] = remoteCd;
+        return;
+      }
+      if (!remoteCd) return;
+
+      // Merge Students
+      const localStudentIds = new Set(localCd.students.map(s => s.id));
+      const mergedStudents = [...localCd.students];
+      remoteCd.students.forEach(rs => {
+        if (!localStudentIds.has(rs.id)) {
+          mergedStudents.push(rs);
+        }
+      });
+
+      // Merge Todos
+      const localTodoIds = new Set(localCd.todos.map(t => t.id));
+      const mergedTodos = [...localCd.todos];
+      remoteCd.todos.forEach(rt => {
+        if (!localTodoIds.has(rt.id)) {
+          mergedTodos.push(rt);
+        }
+      });
+
+      // Merge Records (Crucial)
+      const mergedRecords = [...localCd.records];
+      remoteCd.records.forEach(rr => {
+        const idx = mergedRecords.findIndex(r => r.date === rr.date);
+        if (idx === -1) {
+          mergedRecords.push(rr);
+        } else {
+          // Conflict: Same date.
+          // Heuristic: Keep the one with longer classLog or more studentNotes
+          const localR = mergedRecords[idx];
+          const localWeight = (localR.classLog?.length || 0) + Object.keys(localR.studentNotes || {}).length * 10;
+          const remoteWeight = (rr.classLog?.length || 0) + Object.keys(rr.studentNotes || {}).length * 10;
+          
+          if (remoteWeight > localWeight) {
+            mergedRecords[idx] = rr;
+          }
+        }
+      });
+
+      merged.classData[classId] = {
+        students: mergedStudents,
+        records: mergedRecords,
+        todos: mergedTodos
+      };
+    });
+
+    // 3. Templates Merge
+    const localTemplateIds = new Set((local.templates || []).map(t => t.id));
+    if (remote.templates) {
+      remote.templates.forEach(rt => {
+        if (!localTemplateIds.has(rt.id)) {
+          if (!merged.templates) merged.templates = [];
+          merged.templates.push(rt);
+        }
+      });
+    }
+
+    return merged;
   }
 };
