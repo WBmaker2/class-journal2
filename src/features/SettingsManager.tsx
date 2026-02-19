@@ -143,22 +143,22 @@ export const SettingsManager: React.FC = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 h-14 md:h-16">
                   <Button 
                     onClick={() => uploadData()} 
                     disabled={isSyncing || !securityKey}
-                    className="h-full flex items-center justify-center gap-2 text-xs"
+                    className="h-full flex items-center justify-center gap-2 text-base"
                   >
-                    <CloudUpload size={16} />
+                    <CloudUpload size={20} />
                     클라우드 백업
                   </Button>
                   <Button 
                     onClick={downloadData} 
                     disabled={isSyncing || !securityKey}
                     variant="outline"
-                    className="h-full flex items-center justify-center gap-2 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                    className="h-full flex items-center justify-center gap-2 text-base border-blue-200 text-blue-600 hover:bg-blue-50"
                   >
-                    <RefreshCw size={16} />
+                    <RefreshCw size={20} />
                     클라우드 복구
                   </Button>
                 </div>
