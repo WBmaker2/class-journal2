@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { PlusCircle, Trash, Edit, Save } from 'lucide-react';
+import { PlusCircle, Trash, Edit, Save, GripVertical } from 'lucide-react';
 import type { Subject } from '../types';
 
 export const SubjectManager: React.FC = () => {
@@ -82,34 +82,39 @@ export const SubjectManager: React.FC = () => {
               onDragStart={(e) => onDragStart(e, subject.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => onDrop(e, subject.id)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-white transition-colors"
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-white transition-colors"
             >
-              {editingSubjectId === subject.id ? (
-                <input
-                  type="text"
-                  value={editingSubjectName}
-                  onChange={(e) => setEditingSubjectName(e.target.value)}
-                  className="flex-grow rounded-md border-gray-300 shadow-sm p-1 border"
-                  autoFocus
-                  onBlur={() => handleSave(subject.id)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSave(subject.id)}
-                />
-              ) : (
-                <span className="font-medium">{subject.name}</span>
-              )}
-              <div className="flex items-center gap-2">
+              <div className="text-gray-400">
+                <GripVertical size={16} />
+              </div>
+              <div className="flex-grow flex items-center justify-between">
                 {editingSubjectId === subject.id ? (
-                  <Button onClick={() => handleSave(subject.id)} variant="ghost" size="sm">
-                    <Save size={16} />
-                  </Button>
+                  <input
+                    type="text"
+                    value={editingSubjectName}
+                    onChange={(e) => setEditingSubjectName(e.target.value)}
+                    className="flex-grow rounded-md border-gray-300 shadow-sm p-1 border"
+                    autoFocus
+                    onBlur={() => handleSave(subject.id)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSave(subject.id)}
+                  />
                 ) : (
-                  <Button onClick={() => handleEdit(subject)} variant="ghost" size="sm">
-                    <Edit size={16} />
-                  </Button>
+                  <span className="font-medium">{subject.name}</span>
                 )}
-                <Button onClick={() => deleteSubject(subject.id)} variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                  <Trash size={16} />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {editingSubjectId === subject.id ? (
+                    <Button onClick={() => handleSave(subject.id)} variant="ghost" size="sm">
+                      <Save size={16} />
+                    </Button>
+                  ) : (
+                    <Button onClick={() => handleEdit(subject)} variant="ghost" size="sm">
+                      <Edit size={16} />
+                    </Button>
+                  )}
+                  <Button onClick={() => deleteSubject(subject.id)} variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                    <Trash size={16} />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

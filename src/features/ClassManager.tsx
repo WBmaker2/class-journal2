@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { PlusCircle, Trash, Edit, Save } from 'lucide-react';
+import { PlusCircle, Trash, Edit, Save, GripVertical } from 'lucide-react';
 
 export const ClassManager: React.FC = () => {
   const { classes, addClass, updateClass, deleteClass, reorderClasses } = useClass();
@@ -81,34 +81,39 @@ export const ClassManager: React.FC = () => {
               onDragStart={(e) => onDragStart(e, classItem.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => onDrop(e, classItem.id)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab"
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-white transition-colors"
             >
-              {editingClassId === classItem.id ? (
-                <input
-                  type="text"
-                  value={editingClassName}
-                  onChange={(e) => setEditingClassName(e.target.value)}
-                  className="flex-grow rounded-md border-gray-300 shadow-sm p-1 border"
-                  autoFocus
-                  onBlur={() => handleSave(classItem.id)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSave(classItem.id)}
-                />
-              ) : (
-                <span className="font-medium">{classItem.name}</span>
-              )}
-              <div className="flex items-center gap-2">
+              <div className="text-gray-400">
+                <GripVertical size={16} />
+              </div>
+              <div className="flex-grow flex items-center justify-between">
                 {editingClassId === classItem.id ? (
-                  <Button onClick={() => handleSave(classItem.id)} variant="ghost" size="sm">
-                    <Save size={16} />
-                  </Button>
+                  <input
+                    type="text"
+                    value={editingClassName}
+                    onChange={(e) => setEditingClassName(e.target.value)}
+                    className="flex-grow rounded-md border-gray-300 shadow-sm p-1 border"
+                    autoFocus
+                    onBlur={() => handleSave(classItem.id)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSave(classItem.id)}
+                  />
                 ) : (
-                  <Button onClick={() => handleEdit(classItem)} variant="ghost" size="sm">
-                    <Edit size={16} />
-                  </Button>
+                  <span className="font-medium">{classItem.name}</span>
                 )}
-                <Button onClick={() => deleteClass(classItem.id)} variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                  <Trash size={16} />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {editingClassId === classItem.id ? (
+                    <Button onClick={() => handleSave(classItem.id)} variant="ghost" size="sm">
+                      <Save size={16} />
+                    </Button>
+                  ) : (
+                    <Button onClick={() => handleEdit(classItem)} variant="ghost" size="sm">
+                      <Edit size={16} />
+                    </Button>
+                  )}
+                  <Button onClick={() => deleteClass(classItem.id)} variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                    <Trash size={16} />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
