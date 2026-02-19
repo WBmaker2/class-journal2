@@ -7,6 +7,7 @@ import {
   Globe, 
   FileJson, 
   Settings as SettingsIcon, 
+  Calendar as CalendarIcon,
   ClipboardCheck, 
   Clock, 
   BookOpen, 
@@ -47,6 +48,10 @@ export const GuideManager: React.FC = () => {
       text: "설정 페이지에서 학급을 추가, 수정, 삭제하실 수 있고, 과목도 추가, 수정, 삭제하실 수 있습니다."
     },
     {
+      icon: <CalendarIcon className="text-blue-400" />,
+      text: "기준 날짜에서는 입력 날짜를 선택하실 수 있습니다. 기본은 오늘로 설정됩니다. 학급 선택을 하실 수 있습니다. 초등 담임선생님께서는 1개의 학급만 등록하여 사용하시면 됩니다."
+    },
+    {
       icon: <ClipboardCheck className="text-blue-600" />,
       text: "출결 관리에서는 날씨, 분위기, 출결을 기록하실 수 있고, '학생 관리' 기능을 통하여 학생을 등록, 수정, 삭제하실 수 있습니다."
     },
@@ -80,7 +85,7 @@ export const GuideManager: React.FC = () => {
     },
     {
       icon: <Smartphone className="text-slate-500" />,
-      text: "PC 크롬브라우저 사용을 염두에 두고 개발하였습니다. 핸드폰이나 태블릿에서도 작동이 되기는 하지만, 원활하지 않을 수 있습니다."
+      text: "PC 크롬브라우저 사용을 염두에 두고 개발하였습니다. 핸드폰이나 태블릿에서도 작동이 되기는 하지만, 원활하지 않을 수 있습니다. 크롬 브라우저 사용 시 학급 일지 작성용 크롬 프로필(구글 계정)을 하나 정해서 사용해 주세요."
     },
     {
       icon: <Info className="text-gray-400" />,
