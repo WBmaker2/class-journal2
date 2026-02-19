@@ -16,14 +16,15 @@ import {
   CheckCircle, 
   Mail,
   Info,
-  Repeat
+  Repeat,
+  Smartphone
 } from 'lucide-react';
 
 export const GuideManager: React.FC = () => {
   const guideItems = [
     {
       icon: <ShieldAlert className="text-red-500" />,
-      text: "개인정보보호를 최우선으로 생각해주세요."
+      text: "개인정보보호를 최우선으로 생각해 주세요."
     },
     {
       icon: <Code className="text-blue-500" />,
@@ -31,23 +32,23 @@ export const GuideManager: React.FC = () => {
     },
     {
       icon: <Lock className="text-indigo-500" />,
-      text: "구글 로그인을 통해서 클라우드 백업을 하실 때 비밀번호를 입력하셔야 합니다. 그러면 데이터가 암호화되어 백업되고, DB관리자인 저도 데이터를 읽을 수 없습니다.\n※ 암호화 비밀번호를 꼭 기억해주세요. (구글 ID/PW와는 다른 비밀번호 입니다.)"
+      text: "구글 로그인을 통해서 클라우드 백업을 하실 때 비밀번호를 입력하셔야 합니다. 그러면 데이터가 암호화되어 백업됩니다. 입력한 암호는 서버에 저장되지 않으며, 해당 비밀번호를 모르면 데이터를 복구할 수 없습니다.\n※ 암호화 비밀번호를 꼭 기억해 주세요. (구글 ID/PW와는 다른 별도의 비밀번호입니다.)"
     },
     {
       icon: <Globe className="text-green-500" />,
-      text: "클라우드 백업은 필수가 아닙니다. 선택사항입니다. 기본적으로 로컬 브라우저에 데이터가 저장됩니다. 그러므로 여러사람이 함께 사용하는 공용PC에서는 일지를 실행하지 마세요. 로컬 데이터를 지우고 싶으시면 브라우저의 '인터넷 사용 기록 삭제'를 실행하시면 됩니다. ('인터넷 사용 기록 삭제'를 하지 않으면 데이터는 지워지지 않습니다.)"
+      text: "클라우드 백업은 필수가 아닙니다. 선택사항입니다. 기본적으로 로컬 브라우저에 데이터가 저장됩니다. 그러므로 여러 사람이 함께 사용하는 공용 PC에서는 프로그램 사용을 권장하지 않습니다. 로컬 데이터를 지우고 싶으시면 브라우저의 '인터넷 사용 기록 삭제'를 실행하시면 됩니다. ('인터넷 사용 기록 삭제'를 하지 않으면 데이터는 지워지지 않습니다.)"
     },
     {
       icon: <FileJson className="text-orange-500" />,
-      text: "PC에 JSON파일로 백업 하고 싶으시면 'PC 로컬 백업/복구'기능을 이용해 주세요. 백업한 파일로 복구하는 것도 가능합니다. 이때도 개인정보보호를 최우선으로 생각해주세요."
+      text: "PC에 JSON파일로 백업하고 싶으시면 'PC 로컬 백업/복구'기능을 이용해 주세요. 백업한 파일로 복구하는 것도 가능합니다. 이때도 개인정보보호를 최우선으로 생각해 주세요."
     },
     {
       icon: <SettingsIcon className="text-gray-500" />,
-      text: "설정 페이지에서 학급을 추가, 수정, 삭제하실 수 있고, 과목도 추가, 수정, 삭제 하실 수 있습니다."
+      text: "설정 페이지에서 학급을 추가, 수정, 삭제하실 수 있고, 과목도 추가, 수정, 삭제하실 수 있습니다."
     },
     {
       icon: <ClipboardCheck className="text-blue-600" />,
-      text: "출결 관리에서는 날씨, 분위기, 출결을 기록하실 수 있고, '학생 관리' 기능을 통하여 학생을 등록, 수정, 삭제 하실 수 있습니다."
+      text: "출결 관리에서는 날씨, 분위기, 출결을 기록하실 수 있고, '학생 관리' 기능을 통하여 학생을 등록, 수정, 삭제하실 수 있습니다."
     },
     {
       icon: <Clock className="text-amber-500" />,
@@ -55,15 +56,15 @@ export const GuideManager: React.FC = () => {
     },
     {
       icon: <BookOpen className="text-emerald-600" />,
-      text: "학급 일지에서는 전반적인 내용을 줄글로 입력하실 수 있습니다. 입력하신 내용은 기간을 설정하여 엑셀파일, PDF파일로 다운로드 하실 수 있습니다."
+      text: "학급 일지에서는 전반적인 내용을 줄글로 입력하실 수 있습니다. 입력한 내용은 기간을 설정하여 엑셀 또는 PDF 파일로 다운로드할 수 있습니다."
     },
     {
       icon: <Users className="text-purple-500" />,
-      text: "학생별 누가기록을 입력하실 수 있습니다. 입력하신 내용은 기간을 설정하여 엑셀파일, PDF파일로 다운로드 하실 수 있습니다."
+      text: "학생별 누가기록을 입력하실 수 있습니다. 입력한 내용은 기간을 설정하여 엑셀 또는 PDF 파일로 다운로드할 수 있습니다."
     },
     {
       icon: <LayoutDashboard className="text-cyan-500" />,
-      text: "대시보드에서는 각 종 통계자료를 보실 수 있고, 할 일 목록(To Do List)기능을 사용하실 수 있습니다."
+      text: "대시보드에서는 각 종 통계자료를 보실 수 있고, 할 일 목록(To Do List) 기능을 사용하실 수 있습니다."
     },
     {
       icon: <Calendar className="text-rose-500" />,
@@ -76,6 +77,10 @@ export const GuideManager: React.FC = () => {
     {
       icon: <Repeat className="text-blue-400" />,
       text: "여러 대의 기기를 사용하실 때에는 1번 기기에서 '클라우드 백업'을 하신 후 2번 기기에서 로그인하고 바로 '클라우드 복구'를 하시면 됩니다. 2번 기기에서 작업이 끝나면, 다시 '클라우드 백업'을 하신 후 1번 기기에서 '클라우드 복구'를 해주세요."
+    },
+    {
+      icon: <Smartphone className="text-slate-500" />,
+      text: "PC 크롬브라우저 사용을 염두에 두고 개발하였습니다. 핸드폰이나 태블릿에서도 작동이 되기는 하지만, 원활하지 않을 수 있습니다."
     },
     {
       icon: <Info className="text-gray-400" />,
