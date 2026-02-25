@@ -134,9 +134,12 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const localData = localStorageService.getAllData();
       const encryptedPayload = encryptionService.encrypt(localData, securityKey);
+      const checksum = encryptionService.generateChecksum(localData);
+      
       const encryptedForCloud = {
           isEncrypted: true,
           payload: encryptedPayload,
+          checksum: checksum,
           updatedAt: new Date().toISOString()
       };
       await supabaseService.upsertUserData(user.id, encryptedForCloud);
@@ -173,6 +176,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (encryptedData.isEncrypted) {
           try {
               const decrypted = encryptionService.decrypt(encryptedData.payload, securityKey);
+              
+              // Verify checksum if available
+              if (encryptedData.checksum) {
+                  const currentChecksum = encryptionService.generateChecksum(decrypted);
+                  if (currentChecksum !== encryptedData.checksum) {
+                      showToast('데이터 무결성 검증에 실패했습니다. 데이터가 손상되었을 수 있습니다.', 'error');
+                      return;
+                  }
+              }
+
               localStorageService.saveAllData(decrypted);
               const remoteTime = new Date(cloudResult.updated_at);
               setLastSync(remoteTime.toLocaleString());
@@ -281,6 +294,15 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       let decryptedRemote;
       if (pendingRemoteData.isEncrypted) {
         decryptedRemote = encryptionService.decrypt(pendingRemoteData.payload, securityKey);
+        
+        // Verify checksum if available
+        if (pendingRemoteData.checksum) {
+          const remoteChecksum = encryptionService.generateChecksum(decryptedRemote);
+          if (remoteChecksum !== pendingRemoteData.checksum) {
+            showToast('원격 데이터 무결성 검증에 실패했습니다.', 'error');
+            return;
+          }
+        }
       } else {
         decryptedRemote = pendingRemoteData;
       }

@@ -111,7 +111,7 @@ function App() {
            </div>
         </header>
 
-        <div className="max-w-4xl mx-auto pb-24 md:pb-0">
+        <div className="max-w-7xl mx-auto pb-24 md:pb-0 px-1 md:px-0">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'attendance' && <AttendanceTracker />}
           {activeTab === 'timetable' && <LessonLogManager />}
@@ -123,20 +123,22 @@ function App() {
         </div>
       </main>
 
-      {/* Bottom Nav (Mobile) */}
-      <nav className="md:hidden bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 left-0 right-0 z-10">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id as Tab)}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              activeTab === item.id ? 'text-blue-600' : 'text-gray-400'
-            }`}
-          >
-            <item.icon size={20} />
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </button>
-        ))}
+      {/* Bottom Nav (Mobile) - Optimized with scroll if items overflow */}
+      <nav className="md:hidden bg-white border-t border-gray-200 flex overflow-x-auto p-1 fixed bottom-0 left-0 right-0 z-10 scrollbar-hide">
+        <div className="flex min-w-full justify-around">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id as Tab)}
+              className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-colors flex-shrink-0 min-w-[64px] ${
+                activeTab === item.id ? 'text-blue-600' : 'text-gray-400'
+              }`}
+            >
+              <item.icon size={20} />
+              <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
+            </button>
+          ))}
+        </div>
       </nav>
     </div>
   )

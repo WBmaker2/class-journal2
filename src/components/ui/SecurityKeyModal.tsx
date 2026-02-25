@@ -14,8 +14,13 @@ export const SecurityKeyModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 4) {
-      alert('보안 비밀번호는 최소 4자리 이상이어야 합니다.');
+    
+    // Stronger password policy: min 8 chars, mix of letters and numbers
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    
+    if (password.length < 8 || !hasLetter || !hasNumber) {
+      alert('보안 비밀번호는 최소 8자리 이상이어야 하며, 영문과 숫자를 모두 포함해야 합니다.');
       return;
     }
     setSecurityKey(password);
@@ -52,7 +57,7 @@ export const SecurityKeyModal: React.FC = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="비밀번호를 입력하세요 (4자리 이상)"
+                  placeholder="비밀번호 (8자리 이상, 영문+숫자 혼합)"
                   className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border pr-10"
                   autoFocus
                 />

@@ -61,16 +61,16 @@ export const LessonLogManager: React.FC = () => {
   return (
     <Card>
       <CardHeader title="시간표 및 수업 기록" subtitle="교시별 과목과 간단한 수업 내용을 기록하세요" />
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="p-3 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {lessonLogs.map((log) => (
-            <div key={log.period} className="p-4 rounded-lg border border-gray-100 bg-gray-50 space-y-3">
+            <div key={log.period} className="p-3 md:p-4 rounded-lg border border-gray-100 bg-gray-50 space-y-2 md:space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-blue-600">{log.period}교시</span>
                 <select
                   value={log.subject}
                   onChange={(e) => updateLesson(log.period, { subject: e.target.value })}
-                  className="text-sm border-gray-200 rounded-md p-1"
+                  className="text-xs md:text-sm border-gray-200 rounded-md p-1 bg-white outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">과목 선택</option>
                   {subjects.sort((a,b) => a.order - b.order).map(s => (
@@ -83,7 +83,7 @@ export const LessonLogManager: React.FC = () => {
                 value={log.content}
                 placeholder="학습 주제 또는 활동 요약"
                 onChange={(e) => updateLesson(log.period, { content: e.target.value })}
-                className="w-full text-sm p-2 rounded border border-gray-200"
+                className="w-full text-xs md:text-sm p-2 rounded border border-gray-200 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
           ))}

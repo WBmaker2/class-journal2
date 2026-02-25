@@ -38,5 +38,13 @@ export const encryptionService = {
    */
   hashKey: (key: string): string => {
     return CryptoJS.SHA256(key).toString();
+  },
+
+  /**
+   * Generates a checksum for data integrity verification
+   */
+  generateChecksum: (data: any): string => {
+    const jsonStr = JSON.stringify(data);
+    return CryptoJS.SHA256(jsonStr).toString();
   }
 };

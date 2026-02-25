@@ -105,20 +105,20 @@ export const AttendanceTracker: React.FC = () => {
         <CardContent className="flex flex-col gap-6">
           <div className="space-y-3">
             <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">오늘의 날씨</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 md:gap-2">
               {WEATHER_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => updateRecord({ weather: opt.value })}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all min-w-[64px] ${
+                  className={`flex flex-col items-center gap-0.5 md:gap-1 p-2 md:p-3 rounded-xl md:rounded-2xl transition-all min-w-[56px] md:min-w-[64px] ${
                     record.weather === opt.value 
                     ? 'bg-blue-500 text-white shadow-lg shadow-blue-200 scale-105' 
                     : 'bg-white border border-gray-100 text-gray-400 hover:border-blue-200 hover:bg-blue-50/30'
                   }`}
                   title={opt.label}
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
-                  <span className={`text-xs font-medium ${record.weather === opt.value ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
+                  <span className="text-xl md:text-2xl">{opt.emoji}</span>
+                  <span className={`text-[10px] md:text-xs font-medium ${record.weather === opt.value ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
                 </button>
               ))}
             </div>
@@ -126,20 +126,20 @@ export const AttendanceTracker: React.FC = () => {
 
           <div className="space-y-3">
             <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">교실 분위기</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 md:gap-2">
               {ATMOSPHERE_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => updateRecord({ atmosphere: opt.value })}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all min-w-[64px] ${
+                  className={`flex flex-col items-center gap-0.5 md:gap-1 p-2 md:p-3 rounded-xl md:rounded-2xl transition-all min-w-[56px] md:min-w-[64px] ${
                     record.atmosphere === opt.value 
                     ? 'bg-purple-500 text-white shadow-lg shadow-purple-200 scale-105' 
                     : 'bg-white border border-gray-100 text-gray-400 hover:border-purple-200 hover:bg-purple-50/30'
                   }`}
                   title={opt.label}
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
-                  <span className={`text-xs font-medium ${record.atmosphere === opt.value ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
+                  <span className="text-xl md:text-2xl">{opt.emoji}</span>
+                  <span className={`text-[10px] md:text-xs font-medium ${record.atmosphere === opt.value ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
                 </button>
               ))}
             </div>
@@ -149,17 +149,36 @@ export const AttendanceTracker: React.FC = () => {
 
       <Card>
         <CardHeader title="출결 관리" subtitle={`총원: ${students.length}명`} />
-        <CardContent>
+        <CardContent className="p-2 md:p-6">
           <div className="divide-y divide-gray-100">
             {students.map((student) => {
               const status = record.attendance.find(a => a.studentId === student.id)?.status || 'Present';
               return (
-                <div key={student.id} className="py-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-bold text-gray-400 w-6">{student.number}</span>
-                    <span className="font-semibold text-gray-900">{student.name}</span>
+                <div key={student.id} className="py-3 md:py-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 md:gap-4 flex-1">
+                    <span className="text-xs md:text-sm font-bold text-gray-400 w-5 md:w-6">{student.number}</span>
+                    <span className="text-sm md:text-base font-semibold text-gray-900 truncate">{student.name}</span>
                   </div>
-                  <div className="flex gap-1">
+                  
+                  {/* Mobile: Select Dropdown */}
+                  <div className="md:hidden">
+                    <select
+                      value={status}
+                      onChange={(e) => updateAttendance(student.id, e.target.value as AttendanceStatus)}
+                      className={`text-xs p-1.5 rounded-md border font-medium outline-none ${
+                        status === 'Present' ? 'bg-green-50 text-green-700 border-green-200' :
+                        status === 'Absent' ? 'bg-red-50 text-red-700 border-red-200' :
+                        'bg-yellow-50 text-yellow-700 border-yellow-200'
+                      }`}
+                    >
+                      {(['Present', 'Absent', 'Late', 'Early Leave'] as AttendanceStatus[]).map((s) => (
+                        <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Tablet/Desktop: Buttons */}
+                  <div className="hidden md:flex gap-1">
                     {(['Present', 'Absent', 'Late', 'Early Leave'] as AttendanceStatus[]).map((s) => (
                       <Button
                         key={s}

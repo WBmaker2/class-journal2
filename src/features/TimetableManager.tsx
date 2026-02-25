@@ -94,29 +94,29 @@ export const TimetableManager: React.FC = () => {
           title={`${activeClass?.name} 주간 시간표 설정`} 
           subtitle="요일별 정규 수업 시간을 설정하세요. 설정된 시간표는 일지 작성 시 자동 반영됩니다." 
         />
-        <CardContent>
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <table className="w-full border-collapse min-w-[500px] text-xs sm:text-sm">
+        <CardContent className="p-2 md:p-6">
+          <div className="overflow-x-auto -mx-2 md:mx-0 px-2 md:px-0 scrollbar-hide">
+            <table className="w-full border-collapse min-w-[450px] text-[11px] md:text-sm">
               <thead>
                 <tr>
-                  <th className="border p-1 sm:p-2 bg-gray-50 w-10 sm:w-20">교시</th>
+                  <th className="border p-1 md:p-2 bg-gray-50 w-10 md:w-20">교시</th>
                   {DAYS.map((day, i) => (
-                    <th key={i} className="border p-1 sm:p-2 bg-gray-50">{day}</th>
+                    <th key={i} className="border p-1 md:p-2 bg-gray-50">{day}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: maxPeriods }, (_, i) => i + 1).map(period => (
                   <tr key={period}>
-                    <td className="border p-1 sm:p-2 text-center font-bold text-blue-600 bg-gray-50">
+                    <td className="border p-1 md:p-2 text-center font-bold text-blue-600 bg-gray-50">
                       {period}
                     </td>
                     {DAYS.map((_, dayIndex) => (
-                      <td key={dayIndex} className="border p-0.5 sm:p-1">
+                      <td key={dayIndex} className="border p-0.5 md:p-1">
                         <select
                           value={editingTimetable.days[dayIndex]?.[period]?.subject || ''}
                           onChange={(e) => handleCellChange(dayIndex, period, e.target.value)}
-                          className="w-full p-1 text-[10px] sm:text-sm border-none focus:ring-1 focus:ring-blue-500 rounded bg-transparent"
+                          className="w-full p-1 text-[10px] md:text-sm border-none focus:ring-1 focus:ring-blue-500 rounded bg-transparent appearance-none text-center"
                         >
                           <option value="">-</option>
                           {subjects.sort((a,b) => a.order - b.order).map(s => (
@@ -131,21 +131,21 @@ export const TimetableManager: React.FC = () => {
             </table>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3 justify-between">
+          <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-between">
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setMaxPeriods(prev => Math.min(10, prev + 1))}>
+              <Button variant="outline" size="sm" onClick={() => setMaxPeriods(prev => Math.min(10, prev + 1))} className="flex-1 sm:flex-none py-2">
                 <Plus size={14} className="mr-1" /> 교시 추가
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setMaxPeriods(prev => Math.max(1, prev - 1))}>
+              <Button variant="outline" size="sm" onClick={() => setMaxPeriods(prev => Math.max(1, prev - 1))} className="flex-1 sm:flex-none py-2">
                 <Minus size={14} className="mr-1" /> 교시 축소
               </Button>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowTemplateModal(true)}>
-                <Copy size={16} className="mr-2" /> 템플릿 관리
+              <Button variant="outline" onClick={() => setShowTemplateModal(true)} className="flex-1 sm:flex-none text-xs md:text-sm">
+                <Copy size={16} className="mr-1 md:mr-2" /> 템플릿
               </Button>
-              <Button onClick={handleSave}>
-                <Save size={16} className="mr-2" /> 시간표 저장
+              <Button onClick={handleSave} className="flex-1 sm:flex-none text-xs md:text-sm">
+                <Save size={16} className="mr-1 md:mr-2" /> 저장
               </Button>
             </div>
           </div>

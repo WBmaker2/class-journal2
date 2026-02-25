@@ -130,37 +130,37 @@ export const ClassLogEditor: React.FC = () => {
           title="학급 일지" 
           subtitle="오늘 있었던 주요 사항을 자유롭게 기록하세요" 
           actions={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 justify-end">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setExportMode('excel')}
-                className="flex items-center gap-2 border-green-600 text-green-700 hover:bg-green-50"
+                className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
               >
                 <FileSpreadsheet size={16} />
-                EXCEL 다운로드
+                <span className="text-[10px] md:text-xs">EXCEL</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setExportMode('pdf')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
               >
                 <Download size={16} />
-                PDF 다운로드
+                <span className="text-[10px] md:text-xs">PDF</span>
               </Button>
             </div>
           }
         />
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 md:space-y-4 p-3 md:p-6">
           <textarea
             value={log}
             onChange={(e) => setLog(e.target.value)}
             onBlur={handleSave}
             placeholder="오늘의 수업 내용, 특이 학생, 상담 내용 등을 입력하세요..."
-            className="w-full h-64 p-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none sm:text-sm"
+            className="w-full h-48 md:h-64 p-3 md:p-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
           />
-          <p className="text-xs text-gray-400 text-right">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
+          <p className="text-[10px] md:text-xs text-gray-400 text-right">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
         </CardContent>
       </Card>
 

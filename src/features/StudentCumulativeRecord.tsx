@@ -168,35 +168,35 @@ export const StudentCumulativeRecord: React.FC = () => {
           title="학생별 누가기록" 
           subtitle={`${currentDate} 학생별 관찰 내용 기록`}
           actions={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 justify-end">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setExportMode('excel')}
-                className="flex items-center gap-2 border-green-600 text-green-700 hover:bg-green-50"
+                className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
               >
                 <FileSpreadsheet size={16} />
-                EXCEL 다운로드
+                <span className="text-[10px] md:text-xs">EXCEL</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setExportMode('pdf')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
               >
                 <Download size={16} />
-                PDF 다운로드
+                <span className="text-[10px] md:text-xs">PDF</span>
               </Button>
             </div>
           } 
         />
-        <CardContent>
+        <CardContent className="p-3 md:p-6">
           <div className="divide-y divide-gray-100">
             {students.map(student => (
-              <div key={student.id} className="py-4 flex flex-col md:flex-row gap-4 items-start md:items-center">
-                <div className="w-24 shrink-0 font-medium text-gray-900">
-                  <span className="text-gray-400 mr-2">{student.number}번</span>
-                  {student.name}
+              <div key={student.id} className="py-3 md:py-4 flex flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
+                <div className="w-full md:w-24 shrink-0 font-medium text-gray-900 flex items-center md:block">
+                  <span className="text-xs md:text-sm text-gray-400 mr-2">{student.number}번</span>
+                  <span className="text-sm md:text-base">{student.name}</span>
                 </div>
                 <div className="flex-1 w-full">
                   <input
@@ -204,14 +204,14 @@ export const StudentCumulativeRecord: React.FC = () => {
                     value={studentNotes[student.id] || ''}
                     onChange={(e) => handleNoteChange(student.id, e.target.value)}
                     placeholder="오늘의 특이사항을 기록하세요..."
-                    className="w-full p-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border border-gray-200 rounded-md text-xs md:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     onBlur={handleSave} 
                   />
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-400 text-right mt-4">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
+          <p className="text-[10px] md:text-xs text-gray-400 text-right mt-4">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
         </CardContent>
       </Card>
 
