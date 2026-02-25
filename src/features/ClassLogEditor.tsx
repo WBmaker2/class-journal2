@@ -124,45 +124,99 @@ export const ClassLogEditor: React.FC = () => {
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader 
-          title="학급 일지" 
-          subtitle="오늘 있었던 주요 사항을 자유롭게 기록하세요" 
-          actions={
-            <div className="flex flex-wrap gap-2 justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setExportMode('excel')}
-                className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
-              >
-                <FileSpreadsheet size={16} />
-                <span className="text-[10px] md:text-xs">EXCEL</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setExportMode('pdf')}
-                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
-              >
-                <Download size={16} />
-                <span className="text-[10px] md:text-xs">PDF</span>
-              </Button>
-            </div>
-          }
-        />
-        <CardContent className="space-y-3 md:space-y-4 p-3 md:p-6">
-          <textarea
-            value={log}
-            onChange={(e) => setLog(e.target.value)}
-            onBlur={handleSave}
-            placeholder="오늘의 수업 내용, 특이 학생, 상담 내용 등을 입력하세요..."
-            className="w-full h-48 md:h-64 p-3 md:p-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+    <div className="grid grid-cols-1 xl:grid-cols-10 gap-6 items-start">
+      <div className="xl:col-span-7 space-y-6">
+        <Card>
+          <CardHeader 
+            title="학급 일지" 
+            subtitle="오늘 있었던 주요 사항을 자유롭게 기록하세요" 
+            actions={
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setExportMode('excel')}
+                  className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
+                >
+                  <FileSpreadsheet size={16} />
+                  <span className="text-[10px] md:text-xs">EXCEL</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setExportMode('pdf')}
+                  className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
+                >
+                  <Download size={16} />
+                  <span className="text-[10px] md:text-xs">PDF</span>
+                </Button>
+              </div>
+            }
           />
-          <p className="text-[10px] md:text-xs text-gray-400 text-right">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
-        </CardContent>
-      </Card>
+          <CardContent className="space-y-3 md:space-y-4 p-3 md:p-6">
+            <textarea
+              value={log}
+              onChange={(e) => setLog(e.target.value)}
+              onBlur={handleSave}
+              placeholder="오늘의 수업 내용, 특이 학생, 상담 내용 등을 입력하세요..."
+              className="w-full h-64 md:h-[500px] xl:h-[600px] p-3 md:p-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm md:text-base"
+            />
+            <p className="text-[10px] md:text-xs text-gray-400 text-right">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Reference Column (XL+) */}
+      <div className="hidden xl:flex xl:col-span-3 flex-col gap-6 sticky top-0">
+        <Card>
+          <CardHeader title="오늘의 정보 요약" />
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
+               <span className="text-sm font-bold text-blue-900">날씨</span>
+               <span className="text-xl">{currentRecord?.weather === 'Sunny' ? '☀️' : 
+                                      currentRecord?.weather === 'Cloudy' ? '☁️' :
+                                      currentRecord?.weather === 'Rainy' ? '☔' : '❓'} {currentRecord?.weather}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl border border-purple-100">
+               <span className="text-sm font-bold text-purple-900">분위기</span>
+               <span className="text-xl">{currentRecord?.atmosphere === 'Calm' ? '🧘' : 
+                                      currentRecord?.atmosphere === 'Energetic' ? '🏃' : '✨'} {currentRecord?.atmosphere}</span>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-3">출결 현황</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 bg-green-50 rounded-lg text-center">
+                  <p className="text-[10px] text-green-600 font-bold">출석</p>
+                  <p className="text-lg font-bold text-green-900">{currentRecord?.attendance.filter(a => a.status === 'Present').length || 0}</p>
+                </div>
+                <div className="p-2 bg-red-50 rounded-lg text-center">
+                  <p className="text-[10px] text-red-600 font-bold">결석</p>
+                  <p className="text-lg font-bold text-red-900">{currentRecord?.attendance.filter(a => a.status === 'Absent').length || 0}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title="오늘의 수업" />
+          <CardContent>
+            <div className="space-y-2">
+              {currentRecord?.lessonLogs.length ? (
+                currentRecord.lessonLogs.slice(0, 6).map(log => (
+                  <div key={log.period} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md transition-colors border-b border-gray-50 last:border-0">
+                    <span className="text-xs font-bold text-blue-600">{log.period}교시</span>
+                    <span className="text-xs font-medium text-gray-700">{log.subject || '-'}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-gray-400 text-center py-4">기록된 수업이 없습니다.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Hidden Render Area for Batch Export */}
       {isExporting && (
@@ -245,6 +299,6 @@ export const ClassLogEditor: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 };

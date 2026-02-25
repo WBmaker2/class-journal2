@@ -32,14 +32,14 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       <SecurityKeyModal />
       {/* Sidebar (Desktop) */}
-      <aside className="w-full md:w-72 bg-white border-b md:border-r border-gray-200 p-4 space-y-2 hidden md:block flex-shrink-0">
+      <aside className="w-full md:w-64 lg:w-72 bg-white border-b md:border-r border-gray-200 p-4 space-y-2 hidden md:block flex-shrink-0 overflow-y-auto">
         <div className="mb-8 pl-2 pr-0">
-          <h1 className="text-lg font-bold text-blue-600 flex items-center gap-1.5 whitespace-nowrap">
+          <h1 className="text-lg lg:text-xl font-bold text-blue-600 flex items-center gap-1.5 whitespace-nowrap">
             <BookOpen size={24} className="flex-shrink-0" />
-            우리 반 학급일지 <span className="text-[10px] font-normal text-gray-400 ml-1">v3.7.6</span>
+            우리 반 학급일지 <span className="text-[10px] font-normal text-gray-400 ml-1">v3.8.0</span>
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
@@ -69,10 +69,10 @@ function App() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as Tab)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === item.id 
-                  ? 'bg-blue-50 text-blue-600' 
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
+                  : 'text-gray-500 hover:bg-gray-50'
               }`}
             >
               <item.icon size={20} />
@@ -83,14 +83,14 @@ function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-2 md:p-8 overflow-y-auto h-screen">
+      <main className="flex-1 p-2 md:p-6 lg:p-8 xl:p-12 overflow-y-auto h-screen bg-slate-50/50">
         {/* Mobile Header */}
-        <header className="mb-4 md:hidden space-y-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+        <header className="mb-4 md:hidden space-y-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
            <div className="flex items-center justify-between gap-2">
              <h1 className="text-base font-bold text-blue-600 flex items-center gap-1.5 min-w-0">
                <BookOpen size={20} className="flex-shrink-0" />
                <span className="truncate">우리 반 학급일지</span>
-               <span className="text-[10px] font-normal text-gray-400 flex-shrink-0">v3.7.6</span>
+               <span className="text-[10px] font-normal text-gray-400 flex-shrink-0">v3.8.0</span>
              </h1>
              <div className="flex-shrink-0">
                <SyncStatusIndicator />
@@ -111,7 +111,7 @@ function App() {
            </div>
         </header>
 
-        <div className="max-w-7xl mx-auto pb-24 md:pb-0 px-1 md:px-0">
+        <div className="max-w-[1600px] mx-auto pb-24 md:pb-0 px-1 md:px-0">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'attendance' && <AttendanceTracker />}
           {activeTab === 'timetable' && <LessonLogManager />}

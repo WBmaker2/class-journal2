@@ -163,57 +163,95 @@ export const StudentCumulativeRecord: React.FC = () => {
 
   return (
     <>
-      <Card>
-        <CardHeader 
-          title="학생별 누가기록" 
-          subtitle={`${currentDate} 학생별 관찰 내용 기록`}
-          actions={
-            <div className="flex flex-wrap gap-2 justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setExportMode('excel')}
-                className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
-              >
-                <FileSpreadsheet size={16} />
-                <span className="text-[10px] md:text-xs">EXCEL</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setExportMode('pdf')}
-                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
-              >
-                <Download size={16} />
-                <span className="text-[10px] md:text-xs">PDF</span>
-              </Button>
-            </div>
-          } 
-        />
-        <CardContent className="p-3 md:p-6">
-          <div className="divide-y divide-gray-100">
-            {students.map(student => (
-              <div key={student.id} className="py-3 md:py-4 flex flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
-                <div className="w-full md:w-24 shrink-0 font-medium text-gray-900 flex items-center md:block">
-                  <span className="text-xs md:text-sm text-gray-400 mr-2">{student.number}번</span>
-                  <span className="text-sm md:text-base">{student.name}</span>
+      <div className="grid grid-cols-1 xl:grid-cols-10 gap-6 items-start">
+        <div className="xl:col-span-7 space-y-6">
+          <Card>
+            <CardHeader 
+              title="학생별 누가기록" 
+              subtitle={`${currentDate} 학생별 관찰 내용 기록`}
+              actions={
+                <div className="flex flex-wrap gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setExportMode('excel')}
+                    className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
+                  >
+                    <FileSpreadsheet size={16} />
+                    <span className="text-[10px] md:text-xs">EXCEL</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setExportMode('pdf')}
+                    className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
+                  >
+                    <Download size={16} />
+                    <span className="text-[10px] md:text-xs">PDF</span>
+                  </Button>
                 </div>
-                <div className="flex-1 w-full">
-                  <input
-                    type="text"
-                    value={studentNotes[student.id] || ''}
-                    onChange={(e) => handleNoteChange(student.id, e.target.value)}
-                    placeholder="오늘의 특이사항을 기록하세요..."
-                    className="w-full p-2 border border-gray-200 rounded-md text-xs md:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    onBlur={handleSave} 
-                  />
-                </div>
+              } 
+            />
+            <CardContent className="p-3 md:p-6 lg:p-8">
+              <div className="divide-y divide-gray-100">
+                {students.map(student => (
+                  <div key={student.id} className="py-3 md:py-4 flex flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
+                    <div className="w-full md:w-24 shrink-0 font-medium text-gray-900 flex items-center md:block">
+                      <span className="text-xs md:text-sm text-gray-400 mr-2">{student.number}번</span>
+                      <span className="text-sm md:text-base font-bold">{student.name}</span>
+                    </div>
+                    <div className="flex-1 w-full">
+                      <input
+                        type="text"
+                        value={studentNotes[student.id] || ''}
+                        onChange={(e) => handleNoteChange(student.id, e.target.value)}
+                        placeholder="오늘의 특이사항을 기록하세요..."
+                        className="w-full p-2 md:p-3 border border-gray-200 rounded-lg text-xs md:text-sm lg:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-slate-50/30"
+                        onBlur={handleSave} 
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <p className="text-[10px] md:text-xs text-gray-400 text-right mt-4">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
-        </CardContent>
-      </Card>
+              <p className="text-[10px] md:text-xs text-gray-400 text-right mt-4">자동 저장됨 (입력 후 포커스를 해제하세요)</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Reference Column (XL+) */}
+        <div className="hidden xl:flex xl:col-span-3 flex-col gap-6 sticky top-0">
+          <Card>
+            <CardHeader title="오늘의 출결 요약" subtitle={currentDate} />
+            <CardContent>
+               <div className="space-y-3">
+                  {records.find(r => r.date === currentDate)?.attendance.filter(a => a.status !== 'Present').map(a => {
+                    const student = students.find(s => s.id === a.studentId);
+                    return (
+                      <div key={a.studentId} className="flex items-center justify-between p-2.5 rounded-lg border bg-white shadow-sm">
+                        <div className="flex items-center gap-2">
+                           <span className="text-xs font-bold text-gray-400">{student?.number}</span>
+                           <span className="text-sm font-bold text-gray-900">{student?.name}</span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          a.status === 'Absent' ? 'bg-red-50 text-red-600' : 
+                          a.status === 'Late' ? 'bg-yellow-50 text-yellow-600' : 'bg-blue-50 text-blue-600'
+                        }`}>
+                          {a.status === 'Absent' ? '결석' : a.status === 'Late' ? '지각' : '조퇴'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {!records.find(r => r.date === currentDate)?.attendance.some(a => a.status !== 'Present') && (
+                    <div className="text-center py-6">
+                      <div className="text-3xl mb-2">🎉</div>
+                      <p className="text-xs font-bold text-green-600 uppercase tracking-widest">전원 출석</p>
+                    </div>
+                  )}
+               </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Hidden Render Area for Batch Export */}
       {isExporting && (

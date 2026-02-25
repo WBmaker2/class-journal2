@@ -94,29 +94,29 @@ export const TimetableManager: React.FC = () => {
           title={`${activeClass?.name} 주간 시간표 설정`} 
           subtitle="요일별 정규 수업 시간을 설정하세요. 설정된 시간표는 일지 작성 시 자동 반영됩니다." 
         />
-        <CardContent className="p-2 md:p-6">
-          <div className="overflow-x-auto -mx-2 md:mx-0 px-2 md:px-0 scrollbar-hide">
-            <table className="w-full border-collapse min-w-[450px] text-[11px] md:text-sm">
+        <CardContent className="p-2 md:p-6 lg:p-10">
+          <div className="overflow-x-auto lg:overflow-visible -mx-2 md:mx-0 px-2 md:px-0 scrollbar-hide">
+            <table className="w-full border-collapse min-w-[450px] lg:min-w-0 text-[11px] md:text-sm lg:text-base">
               <thead>
                 <tr>
-                  <th className="border p-1 md:p-2 bg-gray-50 w-10 md:w-20">교시</th>
+                  <th className="border p-1 md:p-3 lg:p-4 bg-slate-50 w-10 md:w-20 lg:w-28 text-gray-400 uppercase tracking-wider font-bold">교시</th>
                   {DAYS.map((day, i) => (
-                    <th key={i} className="border p-1 md:p-2 bg-gray-50">{day}</th>
+                    <th key={i} className="border p-1 md:p-3 lg:p-4 bg-slate-50 text-gray-700 font-bold">{day}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: maxPeriods }, (_, i) => i + 1).map(period => (
-                  <tr key={period}>
-                    <td className="border p-1 md:p-2 text-center font-bold text-blue-600 bg-gray-50">
+                  <tr key={period} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="border p-1 md:p-3 lg:p-4 text-center font-black text-blue-600 bg-slate-50/50">
                       {period}
                     </td>
                     {DAYS.map((_, dayIndex) => (
-                      <td key={dayIndex} className="border p-0.5 md:p-1">
+                      <td key={dayIndex} className="border p-0.5 md:p-1 lg:p-2">
                         <select
                           value={editingTimetable.days[dayIndex]?.[period]?.subject || ''}
                           onChange={(e) => handleCellChange(dayIndex, period, e.target.value)}
-                          className="w-full p-1 text-[10px] md:text-sm border-none focus:ring-1 focus:ring-blue-500 rounded bg-transparent appearance-none text-center"
+                          className="w-full p-1 lg:p-2 text-[10px] md:text-sm lg:text-base border-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-transparent appearance-none text-center font-medium"
                         >
                           <option value="">-</option>
                           {subjects.sort((a,b) => a.order - b.order).map(s => (
