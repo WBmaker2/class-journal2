@@ -34,11 +34,11 @@ function App() {
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       <SecurityKeyModal />
       {/* Sidebar (Desktop) */}
-      <aside className="w-full md:w-64 bg-white border-b md:border-r border-gray-200 p-4 space-y-2 hidden md:block flex-shrink-0">
-        <div className="mb-8 px-2">
-          <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
-            <BookOpen size={24} />
-            우리 반 학급일지 <span className="text-[10px] font-normal text-gray-400">v3.7.6</span>
+      <aside className="w-full md:w-72 bg-white border-b md:border-r border-gray-200 p-4 space-y-2 hidden md:block flex-shrink-0">
+        <div className="mb-8 pl-2 pr-0">
+          <h1 className="text-lg font-bold text-blue-600 flex items-center gap-1.5 whitespace-nowrap">
+            <BookOpen size={24} className="flex-shrink-0" />
+            우리 반 학급일지 <span className="text-[10px] font-normal text-gray-400 ml-1">v3.7.6</span>
           </h1>
           <div className="mt-2">
             <SyncStatusIndicator />
