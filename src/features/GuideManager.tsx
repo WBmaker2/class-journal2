@@ -81,20 +81,41 @@ export const GuideManager: React.FC = () => {
     },
     {
       icon: <Repeat className="text-blue-400" />,
-      text: "여러 대의 기기를 사용하실 때에는 1번 기기에서 '클라우드 백업'을 하신 후 2번 기기에서 로그인하고 바로 '클라우드 복구'를 하시면 됩니다. 2번 기기에서 작업이 끝나면, 다시 '클라우드 백업'을 하신 후 1번 기기에서 '클라우드 복구'를 해주세요. (1대의 PC만 사용하시면 가장 안정적으로 사용하실 수 있습니다.)"
+      text: "여러 대의 기기를 사용하실 때에는 1번 기기에서 '클라우드 백업'을 하신 후 2번 기기에서 로그인하고 바로 '클라우드 복구'를 하시면 됩니다. 2번 기기에서 작업이 끝나면, 다시 '클라우드 백업'을 하신 후 1번 기기에서 '클라우드 복구'를 해주세요. (1인 사용 시 가장 안전하게 사용 가능합니다.)"
     },
     {
       icon: <Smartphone className="text-slate-500" />,
-      text: "PC 크롬브라우저 사용을 염두에 두고 개발하였습니다. 핸드폰이나 태블릿에서도 작동이 되기는 하지만, 원활하지 않을 수 있습니다. 크롬 브라우저 사용 시 학급 일지 작성용 크롬 프로필(구글 계정)을 하나 정해서 사용해 주세요."
+      text: "최신 업데이트를 통해 스마트폰과 태블릿에서도 쾌적하게 사용하실 수 있도록 최적화되었습니다. 기기에 관계없이 언제 어디서나 학급 일지를 관리해 보세요."
     },
     {
       icon: <Info className="text-gray-400" />,
-      text: "수익을 목적으로 한 프로그램이 아닙니다. 개인 프로젝트이고, 저는 개발자가 아니기 때문에 오류가 있을 수 있습니다. 격려의 말씀, 기능개선 건의 등은 아래의 이메일 주소로 보내주시기 바랍니다."
+      text: "수익을 목적으로 한 프로그램이 아닙니다. 개인 프로젝트이고, 오류가 있을 수 있습니다. 격려의 말씀, 기능개선 건의 등은 아래의 이메일 주소로 보내주시기 바랍니다."
+    }
+  ];
+
+  const updateLogs = [
+    {
+      version: "v3.8.0",
+      date: "2026.02.25",
+      title: "태블릿 및 대화면 가로모드 최적화",
+      content: "태블릿을 가로로 사용할 때 화면을 더 넓게 활용할 수 있도록 2분할(Dual-pane) 레이아웃을 도입했습니다. 일지를 쓰면서 출결 현황이나 시간표를 옆에서 바로 확인할 수 있습니다."
+    },
+    {
+      version: "v3.7.7",
+      date: "2026.02.25",
+      title: "모바일 환경 UI/UX 최적화",
+      content: "스마트폰의 작은 화면에서도 버튼 클릭이 쉽도록 크기를 조정하고, 출결 관리 UI를 모바일에 최적화된 드롭다운 방식으로 개선했습니다."
+    },
+    {
+      version: "v3.7.6",
+      date: "2026.02.25",
+      title: "보안성 및 데이터 무결성 강화",
+      content: "AES-256 암호화 체크섬 기능을 추가하여 데이터 손상을 방지하고, 보안 비밀번호 정책을 강화하여 소중한 학급 데이터를 더 안전하게 보호합니다."
     }
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
       <Card>
         <CardHeader 
           title="사용 안내" 
@@ -126,6 +147,33 @@ export const GuideManager: React.FC = () => {
               <p className="text-lg font-black text-blue-600">vibehong@gmail.com</p>
             </div>
             <p className="text-xs text-blue-400">언제든지 편하게 메일 보내주세요. 감사합니다!</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Update Log Section */}
+      <Card>
+        <CardHeader 
+          title="업데이트 소식" 
+          subtitle="우리 반 학급일지는 선생님들의 피드백을 바탕으로 계속 발전하고 있습니다." 
+        />
+        <CardContent>
+          <div className="space-y-6">
+            {updateLogs.map((log, index) => (
+              <div key={index} className="relative pl-6 border-l-2 border-blue-100 last:border-0 pb-6 last:pb-0">
+                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-sm"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-black px-2 py-0.5 bg-blue-600 text-white rounded-md uppercase">{log.version}</span>
+                    <span className="text-xs font-bold text-gray-400">{log.date}</span>
+                  </div>
+                  <h4 className="text-base font-bold text-gray-900">{log.title}</h4>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {log.content}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
