@@ -95,6 +95,12 @@ export const GuideManager: React.FC = () => {
 
   const updateLogs = [
     {
+      version: "v3.9.0",
+      date: "2026.03.03",
+      title: "클라우드 동기화 자동화 및 사용성 강화",
+      content: "클라우드 동기화 프로세스를 자동화하고 실시간 동기화 상태 표시 기능을 추가했습니다. 데이터 갈등 해결 시스템을 통해 여러 기기에서 더욱 안전하고 편리하게 일지를 관리할 수 있습니다."
+    },
+    {
       version: "v3.8.0",
       date: "2026.02.25",
       title: "태블릿 및 대화면 가로모드 최적화",
@@ -144,7 +150,7 @@ export const GuideManager: React.FC = () => {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-bold text-blue-900">도움이 필요하거나 제안사항이 있으신가요?</p>
-              <p className="text-lg font-black text-blue-600">vibehong@gmail.com</p>
+              <p className="text-lg font-black text-blue-600">vibecodinghong@gmail.com</p>
             </div>
             <p className="text-xs text-blue-400">언제든지 편하게 메일 보내주세요. 감사합니다!</p>
           </div>

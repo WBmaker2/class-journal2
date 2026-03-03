@@ -2,13 +2,14 @@
   "primaryFeature": "realtime-sync",
   "features": {
     "realtime-sync": {
-      "phase": "report",
+      "phase": "check",
       "status": "completed",
       "planFile": "docs/01-plan/features/realtime-sync.plan.md",
       "designFile": "docs/02-design/features/realtime-sync.design.md",
       "analysisFile": "docs/03-analysis/realtime-sync.analysis.md",
-      "reportFile": "docs/04-report/realtime-sync.report.md",
-      "updatedAt": "2026-03-03T11:05:00.000Z"
+      "updatedAt": "2026-03-03T11:00:00.000Z"
     }
-  }
+  },
+  "_snapshotTimestamp": "2026-03-03T13:18:21.956Z",
+  "_reason": "pre-compress"
 }

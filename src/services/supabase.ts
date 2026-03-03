@@ -43,7 +43,7 @@ export const supabaseService = {
   },
 
   upsertUserData: async (userId: string, journalData: any) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('user_journal_data')
       .upsert({
         user_id: userId,
@@ -51,8 +51,11 @@ export const supabaseService = {
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'user_id'
-      });
+      })
+      .select('updated_at')
+      .single();
 
     if (error) throw error;
+    return data;
   }
 };

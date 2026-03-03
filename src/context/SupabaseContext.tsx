@@ -18,7 +18,7 @@ interface SupabaseContextType {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   uploadData: (isAuto?: boolean, force?: boolean) => Promise<void>;
-  downloadData: () => Promise<void>;
+  downloadData: (isAuto?: boolean) => Promise<void>;
   markAsDirty: () => void;
 }
 
@@ -36,8 +36,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastSyncTime, setLastSyncTime] = useState<number>(0);
   const [isDirty, setIsDirty] = useState(false);
   
-  // Prevent multiple downloads
+  // Refs for concurrency control
   const isDownloadingRef = useRef(false);
+  const isCheckingVersionRef = useRef(false);
 
   // Conflict state
   const [showConflict, setShowConflict] = useState(false);
@@ -120,7 +121,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (isAuto) {
               console.warn('Auto-backup aborted due to conflict');
             } else {
-              showToast('클라우드에 최신 데이터가 있어 업로드를 중단했습니다.', 'info');
+              showToast('클라우드에 더 최신 데이터가 있어 업로드를 중단했습니다.', 'info');
             }
             return;
           }
@@ -142,11 +143,13 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           checksum: checksum,
           updatedAt: new Date().toISOString()
       };
-      await supabaseService.upsertUserData(user.id, encryptedForCloud);
-      const now = new Date();
-      setLastSync(now.toLocaleString());
-      setLastSyncTime(now.getTime());
+      const result = await supabaseService.upsertUserData(user.id, encryptedForCloud);
+      const serverTime = new Date(result.updated_at);
+      
+      setLastSync(serverTime.toLocaleString());
+      setLastSyncTime(serverTime.getTime());
       setIsDirty(false);
+      
       if (!isAuto) {
         showToast('로컬 데이터를 암호화하여 클라우드에 백업했습니다.', 'success');
       }
@@ -160,7 +163,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const downloadData = async () => {
+  const downloadData = async (isAuto = false) => {
     if (!user || !securityKey || isDownloadingRef.current) return;
 
     isDownloadingRef.current = true;
@@ -168,7 +171,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const cloudResult = await supabaseService.fetchUserData(user.id);
       if (!cloudResult) {
-          showToast('클라우드에 저장된 데이터가 없습니다.', 'info');
+          if (!isAuto) showToast('클라우드에 저장된 데이터가 없습니다.', 'info');
           return;
       }
 
@@ -190,7 +193,12 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               const remoteTime = new Date(cloudResult.updated_at);
               setLastSync(remoteTime.toLocaleString());
               setLastSyncTime(remoteTime.getTime());
-              showToast('클라우드 데이터를 성공적으로 복구했습니다.', 'success');
+              
+              if (isAuto) {
+                showToast('클라우드에서 최신 데이터를 가져왔습니다.', 'success');
+              } else {
+                showToast('클라우드 데이터를 성공적으로 복구했습니다.', 'success');
+              }
               // Trigger reload or state sync in other contexts
               window.dispatchEvent(new Event('storage')); 
           } catch (e) {
@@ -225,42 +233,51 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [isDirty, isSyncing, user, securityKey, showConflict]);
 
   // 2. Version Check Logic
-  const checkRemoteVersion = useCallback(async () => {
-    if (!user || !lastSyncTime || isSyncing || showConflict) return;
+  const checkRemoteVersion = useCallback(async (isInitial = false) => {
+    if (!user || isSyncing || showConflict || isCheckingVersionRef.current) return;
 
+    isCheckingVersionRef.current = true;
     try {
       const cloudResult = await supabaseService.fetchUserData(user.id);
       if (cloudResult) {
         const remoteTime = new Date(cloudResult.updated_at).getTime();
-        // If remote is more than 2 seconds newer (to avoid small clock drifts)
-        if (remoteTime > lastSyncTime + 2000) {
-          showToast('클라우드에 더 최신 데이터가 있습니다. 곧 동기화 알림이 표시됩니다.', 'info');
-          // Update remote info and trigger conflict UI if dirty
+        const isRemoteNewer = remoteTime > lastSyncTime + 2000;
+        
+        if (isRemoteNewer) {
           if (isDirty) {
-              setRemoteTimeStr(new Date(cloudResult.updated_at).toLocaleString());
-              setPendingRemoteData(cloudResult.data);
-              setShowConflict(true);
+            setRemoteTimeStr(new Date(cloudResult.updated_at).toLocaleString());
+            setPendingRemoteData(cloudResult.data);
+            setShowConflict(true);
+          } else {
+            // Auto download if not dirty
+            await downloadData(true);
           }
+        } else if (isInitial === true && !lastSyncTime) {
+          // Initial download if no sync history (explicit check for true to ignore event objects)
+          await downloadData(true);
         }
       }
     } catch (e) {
       console.warn('Version check failed', e);
+    } finally {
+      isCheckingVersionRef.current = false;
     }
   }, [user, lastSyncTime, isSyncing, showConflict, isDirty]);
 
-  // Initial download on login
+  // Initial download/check on login
   useEffect(() => {
     if (user && securityKey && !lastSync) {
-      downloadData();
+      checkRemoteVersion(true);
     }
-  }, [user, securityKey, lastSync]);
+  }, [user, securityKey, lastSync, checkRemoteVersion]);
 
   // Realtime & Focus version check
   useEffect(() => {
     if (!isLoggedIn || !securityKey || !user) return;
 
+    const handleFocus = () => checkRemoteVersion();
     const interval = setInterval(checkRemoteVersion, VERSION_CHECK_INTERVAL);
-    window.addEventListener('focus', checkRemoteVersion);
+    window.addEventListener('focus', handleFocus);
 
     // Supabase Realtime Subscription
     const channel = supabase
@@ -282,7 +299,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('focus', checkRemoteVersion);
+      window.removeEventListener('focus', handleFocus);
       supabase.removeChannel(channel);
     };
   }, [isLoggedIn, securityKey, lastSyncTime, user?.id, checkRemoteVersion]);
