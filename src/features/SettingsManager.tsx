@@ -137,7 +137,7 @@ export const SettingsManager: React.FC = () => {
                   {isSyncing ? (
                     <RefreshCw size={20} className="text-blue-500 animate-spin" />
                   ) : (
-                    <Button onClick={downloadData} variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Button onClick={() => downloadData()} variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <RefreshCw size={18} className="text-gray-400" />
                     </Button>
                   )}
@@ -153,7 +153,7 @@ export const SettingsManager: React.FC = () => {
                     <span className="truncate">백업</span>
                   </Button>
                   <Button 
-                    onClick={downloadData} 
+                    onClick={() => downloadData()} 
                     disabled={isSyncing || !securityKey}
                     variant="outline"
                     className="h-11 md:h-full flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base border-blue-200 text-blue-600 hover:bg-blue-50 px-2"
