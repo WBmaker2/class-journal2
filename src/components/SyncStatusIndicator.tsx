@@ -1,9 +1,11 @@
 import React from 'react';
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
-import { useSupabase } from '../context/SupabaseContext';
+import { useAuth } from '../context/AuthContext';
+import { useSync } from '../context/SyncContext';
 
 export const SyncStatusIndicator: React.FC = () => {
-  const { isLoggedIn, isSyncing, lastSync, isDirty } = useSupabase();
+  const { isLoggedIn } = useAuth();
+  const { isSyncing, lastSync, isDirty } = useSync();
 
   if (!isLoggedIn) {
     return (

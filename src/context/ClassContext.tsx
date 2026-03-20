@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { localStorageService } from '../services/localStorage';
-import { useSupabase } from './SupabaseContext';
+import { useSync } from './SyncContext';
 import type { Class, Timetable, TimetableTemplate, Subject } from '../types';
 
 interface ClassContextType {
@@ -31,7 +31,7 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isLoading, setIsLoading] = useState(true);
   const [templates, setTemplates] = useState<TimetableTemplate[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const { markAsDirty } = useSupabase();
+  const { markAsDirty } = useSync();
 
   const loadAllData = () => {
     const allData = localStorageService.getAllData();

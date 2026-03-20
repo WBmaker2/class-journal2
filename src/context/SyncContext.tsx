@@ -23,7 +23,7 @@ const VERSION_CHECK_INTERVAL = 120000;
 
 export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoggedIn } = useAuth();
-  const { securityKey, setSecurityKey } = useSecurity();
+  const { securityKey } = useSecurity();
   const { showToast } = useToast();
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -44,7 +44,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isLoggedIn, securityKey]);
 
-  const uploadData = async (isAuto = false, force = false) => {
+  const uploadData = useCallback(async (isAuto = false, force = false) => {
     if (!user || !securityKey) return;
     
     if (!force) {
@@ -65,8 +65,8 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
         }
-      } catch (e) {
-        console.warn('Conflict check failed, proceeding with caution', e);
+      } catch (error) {
+        console.warn('Conflict check failed, proceeding with caution', error);
       }
     }
 
@@ -100,9 +100,9 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [user, securityKey, lastSyncTime, showToast]);
 
-  const downloadData = async (isAuto = false) => {
+  const downloadData = useCallback(async (isAuto = false) => {
     if (!user || !securityKey || isDownloadingRef.current) return;
 
     isDownloadingRef.current = true;
@@ -138,7 +138,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 showToast('클라우드 데이터를 성공적으로 복구했습니다.', 'success');
               }
               window.dispatchEvent(new Event('storage')); 
-          } catch (e) {
+          } catch {
               showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
           }
       } else {
@@ -149,14 +149,14 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
           showToast('데이터를 복구했습니다 (암호화되지 않은 이전 버전).', 'info');
           window.dispatchEvent(new Event('storage'));
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Download error:', error);
       showToast('복구 중 오류가 발생했습니다.', 'error');
     } finally {
       setIsSyncing(false);
       isDownloadingRef.current = false;
     }
-  };
+  }, [user, securityKey, showToast]);
 
   const checkRemoteVersion = useCallback(async (isInitial = false) => {
     if (!user || isSyncing || showConflict || isCheckingVersionRef.current) return;
@@ -180,12 +180,12 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await downloadData(true);
         }
       }
-    } catch (e) {
-      console.warn('Version check failed', e);
+    } catch (error) {
+      console.warn('Version check failed', error);
     } finally {
       isCheckingVersionRef.current = false;
     }
-  }, [user, lastSyncTime, isSyncing, showConflict, isDirty]);
+  }, [user, lastSyncTime, isSyncing, showConflict, isDirty, downloadData]);
 
   useEffect(() => {
     if (!isDirty || isSyncing || !user || !securityKey || showConflict) return;
@@ -195,7 +195,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, AUTO_BACKUP_DELAY);
 
     return () => clearTimeout(timer);
-  }, [isDirty, isSyncing, user, securityKey, showConflict]);
+  }, [isDirty, isSyncing, user, securityKey, showConflict, uploadData]);
 
   useEffect(() => {
     if (user && securityKey && !lastSync) {
@@ -232,7 +232,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.removeEventListener('focus', handleFocus);
       supabase.removeChannel(channel);
     };
-  }, [isLoggedIn, securityKey, lastSyncTime, user?.id, checkRemoteVersion]);
+  }, [isLoggedIn, securityKey, user, checkRemoteVersion]);
 
   // Conflict Resolution Handlers
   const handleMerge = async () => {
@@ -264,7 +264,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       showToast('데이터를 성공적으로 병합했습니다. 클라우드에 백업을 시도합니다.', 'success');
       await uploadData(false, true);
-    } catch (e) {
+    } catch {
       showToast('데이터 병합 중 오류가 발생했습니다.', 'error');
     }
   };

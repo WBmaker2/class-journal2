@@ -6,11 +6,15 @@ import { localStorageService } from '../services/localStorage';
 import { useToast } from '../context/ToastContext';
 import { ClassManager } from './ClassManager';
 import { SubjectManager } from './SubjectManager';
-import { useSupabase } from '../context/SupabaseContext';
+import { useAuth } from '../context/AuthContext';
+import { useSecurity } from '../context/SecurityContext';
+import { useSync } from '../context/SyncContext';
 
 export const SettingsManager: React.FC = () => {
   const { showToast } = useToast();
-  const { user, isLoggedIn, isSyncing, lastSync, signIn, signOut, uploadData, downloadData, securityKey, setSecurityKey } = useSupabase();
+  const { user, isLoggedIn, signIn, signOut } = useAuth();
+  const { securityKey, setSecurityKey } = useSecurity();
+  const { isSyncing, lastSync, uploadData, downloadData } = useSync();
 
   const handleResetSecurityKey = () => {
     if (confirm('현재 세션의 보안 비밀번호를 초기화하시겠습니까? (서버 데이터는 삭제되지 않으며, 다시 입력해야 합니다.)')) {
@@ -211,4 +215,3 @@ export const SettingsManager: React.FC = () => {
     </div>
   );
 };
-

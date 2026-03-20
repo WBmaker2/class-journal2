@@ -37,8 +37,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async () => {
     try {
       await supabaseService.signInWithGoogle();
-    } catch (error: any) {
-      showToast('로그인 중 오류가 발생했습니다: ' + error.message, 'error');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      showToast('로그인 중 오류가 발생했습니다: ' + message, 'error');
     }
   };
 
@@ -46,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await supabaseService.signOut();
       showToast('로그아웃 되었습니다.', 'success');
-    } catch (error: any) {
+    } catch {
       showToast('로그아웃 중 오류가 발생했습니다.', 'error');
     }
   };
