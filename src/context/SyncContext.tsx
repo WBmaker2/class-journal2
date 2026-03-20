@@ -29,7 +29,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<number>(0);
+  const lastSyncTimeRef = useRef<number>(0);
   const [isDirty, setIsDirty] = useState(false);
   
   const isDownloadingRef = useRef(false);
@@ -53,7 +53,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const cloudResult = await supabaseService.fetchUserData(user.id);
         if (cloudResult) {
           const remoteTime = new Date(cloudResult.updated_at).getTime();
-          if (remoteTime > lastSyncTime + 2000) {
+          if (remoteTime > lastSyncTimeRef.current + 2000) {
             setRemoteTimeStr(new Date(cloudResult.updated_at).toLocaleString());
             setPendingRemoteData(cloudResult.data);
             setShowConflict(true);
@@ -87,7 +87,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const serverTime = new Date(result.updated_at);
       
       setLastSync(serverTime.toLocaleString());
-      setLastSyncTime(serverTime.getTime());
+      lastSyncTimeRef.current = serverTime.getTime();
       setIsDirty(false);
       
       if (!isAuto) {
@@ -101,7 +101,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsSyncing(false);
     }
-  }, [user, securityKey, lastSyncTime, showToast]);
+  }, [user, securityKey, showToast]);
 
   const downloadData = useCallback(async (isAuto = false) => {
     if (!user || !securityKey || isDownloadingRef.current) return;
@@ -131,7 +131,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await importDatabase(decrypted);
               const remoteTime = new Date(cloudResult.updated_at);
               setLastSync(remoteTime.toLocaleString());
-              setLastSyncTime(remoteTime.getTime());
+              lastSyncTimeRef.current = remoteTime.getTime();
               
               if (isAuto) {
                 showToast('클라우드에서 최신 데이터를 가져왔습니다.', 'success');
@@ -143,11 +143,12 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
           }
       } else {
-          await importDatabase(encryptedData);
+          localStorageService.saveAllData(encryptedData);
           const remoteTime = new Date(cloudResult.updated_at);
           setLastSync(remoteTime.toLocaleString());
-          setLastSyncTime(remoteTime.getTime());
+          lastSyncTimeRef.current = remoteTime.getTime();
           showToast('데이터를 복구했습니다 (암호화되지 않은 이전 버전).', 'info');
+
           window.dispatchEvent(new Event('storage'));
       }
     } catch (error) {
@@ -167,7 +168,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cloudResult = await supabaseService.fetchUserData(user.id);
       if (cloudResult) {
         const remoteTime = new Date(cloudResult.updated_at).getTime();
-        const isRemoteNewer = remoteTime > lastSyncTime + 2000;
+        const isRemoteNewer = remoteTime > lastSyncTimeRef.current + 2000;
         
         if (isRemoteNewer) {
           if (isDirty) {
@@ -177,7 +178,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             await downloadData(true);
           }
-        } else if (isInitial === true && !lastSyncTime) {
+        } else if (isInitial === true && !lastSyncTimeRef.current) {
           await downloadData(true);
         }
       }
@@ -186,7 +187,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       isCheckingVersionRef.current = false;
     }
-  }, [user, lastSyncTime, isSyncing, showConflict, isDirty, downloadData]);
+  }, [user, isSyncing, showConflict, isDirty, downloadData]);
 
   useEffect(() => {
     if (!isDirty || isSyncing || !user || !securityKey || showConflict) return;
