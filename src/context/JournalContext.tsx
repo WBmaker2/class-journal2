@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Student, DailyRecord, TodoItem } from '../types';
-import { localStorageService } from '../services/localStorage';
+import { db } from '../services/db';
 import { DUMMY_STUDENTS } from '../services/dummyData';
 import { useClass } from './ClassContext'; 
 import { useSync } from './SyncContext';
@@ -29,19 +29,27 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  const loadJournalData = () => {
+  const loadJournalData = useCallback(async () => {
     if (activeClassId) {
-      const savedStudents = localStorageService.getStudents(activeClassId);
-      if (savedStudents.length === 0) {
-        localStorageService.saveStudents(activeClassId, DUMMY_STUDENTS);
-        setStudents(DUMMY_STUDENTS);
-      } else {
+      try {
+        let savedStudents = await db.students.where('classId').equals(activeClassId).toArray();
+        if (savedStudents.length === 0) {
+          const defaultStudents = DUMMY_STUDENTS.map(s => ({ ...s, classId: activeClassId }));
+          await db.students.bulkPut(defaultStudents);
+          savedStudents = defaultStudents;
+        }
         setStudents(savedStudents);
-      }
 
-      setRecords(localStorageService.getAllRecords(activeClassId));
-      setTodos(localStorageService.getTodos(activeClassId));
-      setIsDataLoaded(true);
+        const loadedRecords = await db.records.where('classId').equals(activeClassId).toArray();
+        setRecords(loadedRecords);
+
+        const loadedTodos = await db.todos.where('classId').equals(activeClassId).toArray();
+        setTodos(loadedTodos);
+      } catch (error) {
+        console.error('Failed to load journal data from IndexedDB:', error);
+      } finally {
+        setIsDataLoaded(true);
+      }
     } else {
       // No class selected, clear data
       setStudents([]);
@@ -49,7 +57,7 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setTodos([]);
       setIsDataLoaded(true);
     }
-  };
+  }, [activeClassId]);
 
   useEffect(() => {
     if (isClassLoading) {
@@ -59,33 +67,68 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     loadJournalData();
 
-    // Sync state when localStorage changes
+    // Sync state when storage changes (optional, but good for multi-tab)
     const handleStorageChange = () => {
       loadJournalData();
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [activeClassId, isClassLoading]);
+  }, [isClassLoading, loadJournalData]);
 
-  const saveCurrentRecord = (record: DailyRecord) => {
+  const saveCurrentRecord = async (record: DailyRecord) => {
     if (!activeClassId) return;
-    localStorageService.saveRecord(activeClassId, record);
-    setRecords(localStorageService.getAllRecords(activeClassId));
+    
+    // Optimistic UI update
+    setRecords(prev => {
+      const idx = prev.findIndex(r => r.date === record.date);
+      if (idx > -1) {
+        const newRecords = [...prev];
+        newRecords[idx] = record;
+        return newRecords;
+      }
+      return [...prev, record];
+    });
+
+    const entity = { ...record, classId: activeClassId, compoundKey: `${activeClassId}_${record.date}` };
+    await db.records.put(entity);
+    
     markAsDirty();
   };
 
-  const updateTodos = (newTodos: TodoItem[]) => {
+  const updateTodos = async (newTodos: TodoItem[]) => {
     if (!activeClassId) return;
-    localStorageService.saveTodos(activeClassId, newTodos);
+    
+    // Optimistic UI update
     setTodos(newTodos);
+    
+    const entities = newTodos.map(t => ({ ...t, classId: activeClassId }));
+    
+    await db.transaction('rw', db.todos, async () => {
+      await db.todos.where('classId').equals(activeClassId).delete();
+      if (entities.length > 0) {
+        await db.todos.bulkPut(entities);
+      }
+    });
+
     markAsDirty();
   };
 
-  const manageStudents = (newStudents: Student[]) => {
+  const manageStudents = async (newStudents: Student[]) => {
     if (!activeClassId) return;
-    localStorageService.saveStudents(activeClassId, newStudents);
+    
+    // Optimistic UI update
     setStudents(newStudents);
+    
+    const entities = newStudents.map(s => ({ ...s, classId: activeClassId }));
+    
+    await db.transaction('rw', db.students, async () => {
+      await db.students.where('classId').equals(activeClassId).delete();
+      if (entities.length > 0) {
+        await db.students.bulkPut(entities);
+      }
+    });
+
     markAsDirty();
   };
 
