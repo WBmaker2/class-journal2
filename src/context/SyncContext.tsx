@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, supabaseService } from '../services/supabase';
 import { localStorageService } from '../services/localStorage';
+import { exportDatabase, importDatabase } from '../services/db';
 import { encryptionService } from '../services/encryption';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
@@ -72,7 +73,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setIsSyncing(true);
     try {
-      const localData = localStorageService.getAllData();
+      const localData = await exportDatabase();
       const encryptedPayload = encryptionService.encrypt(localData, securityKey);
       const checksum = encryptionService.generateChecksum(localData);
       
@@ -127,7 +128,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   }
               }
 
-              localStorageService.saveAllData(decrypted);
+              await importDatabase(decrypted);
               const remoteTime = new Date(cloudResult.updated_at);
               setLastSync(remoteTime.toLocaleString());
               setLastSyncTime(remoteTime.getTime());
@@ -142,7 +143,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
           }
       } else {
-          localStorageService.saveAllData(encryptedData);
+          await importDatabase(encryptedData);
           const remoteTime = new Date(cloudResult.updated_at);
           setLastSync(remoteTime.toLocaleString());
           setLastSyncTime(remoteTime.getTime());
@@ -253,10 +254,10 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         decryptedRemote = pendingRemoteData;
       }
 
-      const localData = localStorageService.getAllData();
+      const localData = await exportDatabase();
       const mergedData = localStorageService.mergeAppData(localData, decryptedRemote);
       
-      localStorageService.saveAllData(mergedData);
+      await importDatabase(mergedData);
       window.dispatchEvent(new Event('storage')); 
       
       setShowConflict(false);

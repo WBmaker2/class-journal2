@@ -2,13 +2,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { LogIn, LogOut, CloudUpload, RefreshCw, FileDown, FileUp, ShieldCheck, CheckCircle2, Lock, Key } from 'lucide-react';
-import { localStorageService } from '../services/localStorage';
 import { useToast } from '../context/ToastContext';
 import { ClassManager } from './ClassManager';
 import { SubjectManager } from './SubjectManager';
 import { useAuth } from '../context/AuthContext';
 import { useSecurity } from '../context/SecurityContext';
 import { useSync } from '../context/SyncContext';
+
+import { exportDatabase, importDatabase } from '../services/db';
 
 export const SettingsManager: React.FC = () => {
   const { showToast } = useToast();
@@ -23,8 +24,8 @@ export const SettingsManager: React.FC = () => {
     }
   };
 
-  const handleExportJson = () => {
-    const data = localStorageService.getAllData();
+  const handleExportJson = async () => {
+    const data = await exportDatabase();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -42,14 +43,14 @@ export const SettingsManager: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const data = JSON.parse(content);
 
         // Basic validation
         if (data.classes && data.classData) {
-            localStorageService.saveAllData(data);
+            await importDatabase(data);
             showToast('데이터가 성공적으로 복구되었습니다. 앱을 새로고침합니다.', 'success');
             setTimeout(() => window.location.reload(), 1000);
         } else {
