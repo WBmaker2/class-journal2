@@ -255,7 +255,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const localData = await exportDatabase();
-      const mergedData = localStorageService.mergeAppData(localData, decryptedRemote);
+      const mergedData = localStorageService.mergeAppData(localData as any, decryptedRemote);
       
       await importDatabase(mergedData);
       window.dispatchEvent(new Event('storage')); 

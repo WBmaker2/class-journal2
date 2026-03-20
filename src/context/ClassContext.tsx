@@ -46,10 +46,10 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setClasses(loadedClasses);
 
       const loadedTemplatesMeta = await db.metadata.get('templates');
-      setTemplates(loadedTemplatesMeta?.value || []);
+      setTemplates((loadedTemplatesMeta?.value as TimetableTemplate[]) || []);
 
       let loadedSubjectsMeta = await db.metadata.get('subjects');
-      if (!loadedSubjectsMeta?.value || loadedSubjectsMeta.value.length === 0) {
+      if (!loadedSubjectsMeta?.value || (loadedSubjectsMeta.value as Subject[]).length === 0) {
         const defaultSubjects = DEFAULT_SUBJECTS.map((name, index) => ({
           id: `subject-${index}`,
           name,
@@ -58,11 +58,11 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         await db.metadata.put({ key: 'subjects', value: defaultSubjects });
         loadedSubjectsMeta = { key: 'subjects', value: defaultSubjects };
       }
-      setSubjects(loadedSubjectsMeta.value);
+      setSubjects(loadedSubjectsMeta.value as Subject[]);
 
       const savedActiveClassIdMeta = await db.metadata.get('activeClassId');
       if (savedActiveClassIdMeta?.value) {
-        setActiveClassIdState(savedActiveClassIdMeta.value);
+        setActiveClassIdState(savedActiveClassIdMeta.value as string);
       } else if (loadedClasses.length > 0) {
         setActiveClassIdState(loadedClasses[0].id);
       }
@@ -126,7 +126,7 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedClasses = classes.filter(c => c.id !== id);
     setClasses(updatedClasses);
     
-    await db.transaction('rw', db.classes, db.students, db.records, db.todos, async () => {
+    await db.transaction('rw', [db.classes, db.students, db.records, db.todos], async () => {
       await db.classes.delete(id);
       await db.students.where('classId').equals(id).delete();
       await db.records.where('classId').equals(id).delete();

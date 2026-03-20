@@ -1,4 +1,4 @@
-import Dexie, { Table } from 'dexie';
+import Dexie, { type Table } from 'dexie';
 import type { Class, Student, DailyRecord, TodoItem } from '../types';
 
 export interface StudentEntity extends Student {
@@ -16,7 +16,7 @@ export interface TodoEntity extends TodoItem {
 
 export interface MetadataEntity {
   key: string;
-  value: unknown;
+  value: any;
 }
 
 export class ClassJournalDB extends Dexie {
@@ -96,7 +96,7 @@ export const exportDatabase = async () => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const importDatabase = async (data: Record<string, any>) => {
-  await db.transaction('rw', db.classes, db.students, db.records, db.todos, db.metadata, async () => {
+  await db.transaction('rw', [db.classes, db.students, db.records, db.todos, db.metadata], async () => {
     await db.classes.clear();
     await db.students.clear();
     await db.records.clear();
