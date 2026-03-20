@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import { PrivacyWarningModal } from '../components/ui/PrivacyWarningModal';
 import { usePDFExport } from '../hooks/usePDFExport';
 import { useExcelExport } from '../hooks/useExcelExport';
 import type { DailyRecord } from '../types';
@@ -14,6 +15,8 @@ export const ClassLogEditor: React.FC = () => {
   const { showToast } = useToast();
   const [log, setLog] = useState('');
   const [exportMode, setExportMode] = useState<'pdf' | 'excel' | null>(null);
+  const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
+  const [pendingExportMode, setPendingExportMode] = useState<'pdf' | 'excel' | null>(null);
   const [startDate, setStartDate] = useState(currentDate);
   const [endDate, setEndDate] = useState(currentDate);
   const [isExporting, setIsExporting] = useState(false);
@@ -123,6 +126,26 @@ export const ClassLogEditor: React.FC = () => {
       setIsExporting(true);
   };
 
+  const handleExportClick = (mode: 'pdf' | 'excel') => {
+    const today = new Date().toISOString().split('T')[0];
+    const isHidden = localStorage.getItem(`hidePrivacyWarning_${today}`) === 'true';
+    
+    if (isHidden) {
+      setExportMode(mode);
+    } else {
+      setPendingExportMode(mode);
+      setShowPrivacyWarning(true);
+    }
+  };
+
+  const handlePrivacyConfirm = () => {
+    setShowPrivacyWarning(false);
+    if (pendingExportMode) {
+      setExportMode(pendingExportMode);
+      setPendingExportMode(null);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-10 gap-6 items-start">
       <div className="xl:col-span-7 space-y-6">
@@ -135,7 +158,7 @@ export const ClassLogEditor: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setExportMode('excel')}
+                  onClick={() => handleExportClick('excel')}
                   className="flex items-center gap-1 md:gap-2 border-green-600 text-green-700 hover:bg-green-50 px-2 md:px-3"
                 >
                   <FileSpreadsheet size={16} />
@@ -144,7 +167,7 @@ export const ClassLogEditor: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setExportMode('pdf')}
+                  onClick={() => handleExportClick('pdf')}
                   className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
                 >
                   <Download size={16} />
@@ -299,6 +322,15 @@ export const ClassLogEditor: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      <PrivacyWarningModal
+        isOpen={showPrivacyWarning}
+        onClose={() => {
+          setShowPrivacyWarning(false);
+          setPendingExportMode(null);
+        }}
+        onConfirm={handlePrivacyConfirm}
+      />
     </div>
   );
 };
