@@ -1,15 +1,139 @@
 import React, { useState } from 'react';
 import { useJournal } from '../context/JournalContext';
 import { Button } from '../components/ui/Button';
-import { Plus, Pencil, Trash2, Save, X, UserX } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, X, UserX, GripVertical } from 'lucide-react';
 import type { Student } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { useToast } from '../context/ToastContext';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface StudentManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+interface SortableItemProps {
+  student: Student;
+  editingId: string | null;
+  editNumber: string;
+  setEditNumber: (val: string) => void;
+  editName: string;
+  setEditName: (val: string) => void;
+  saveEdit: () => void;
+  setEditingId: (id: string | null) => void;
+  startEdit: (student: Student) => void;
+  confirmDelete: (id: string) => void;
+}
+
+const SortableStudentItem: React.FC<SortableItemProps> = ({
+  student,
+  editingId,
+  editNumber,
+  setEditNumber,
+  editName,
+  setEditName,
+  saveEdit,
+  setEditingId,
+  startEdit,
+  confirmDelete,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: student.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center justify-between p-3 hover:bg-gray-50 transition-colors bg-white ${
+        isDragging ? 'shadow-lg border-blue-200 border rounded-xl' : ''
+      }`}
+    >
+      {editingId === student.id ? (
+        <div className="flex gap-2 w-full items-center animate-in fade-in slide-in-from-left-2 duration-200">
+          <input
+            type="number"
+            value={editNumber}
+            onChange={(e) => setEditNumber(e.target.value)}
+            className="w-12 p-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          <input
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            className="flex-1 p-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          <button onClick={saveEdit} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors">
+            <Save size={18} />
+          </button>
+          <button onClick={() => setEditingId(null)} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-lg transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-2">
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-1 rounded transition-colors"
+            >
+              <GripVertical size={18} />
+            </div>
+            <div className="flex items-center gap-4 ml-1">
+              <span className="font-bold text-blue-500/50 w-6 text-center text-sm">{student.number}</span>
+              <span className="font-semibold text-gray-700">{student.name}</span>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <button 
+              onClick={() => startEdit(student)} 
+              className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-all"
+              title="수정"
+            >
+              <Pencil size={16} />
+            </button>
+            <button 
+              onClick={() => confirmDelete(student.id)} 
+              className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-all"
+              title="삭제"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export const StudentManagerModal: React.FC<StudentManagerModalProps> = ({ isOpen, onClose }) => {
   const { students, manageStudents } = useJournal();
@@ -22,6 +146,13 @@ export const StudentManagerModal: React.FC<StudentManagerModalProps> = ({ isOpen
   
   // For custom delete confirmation
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +170,19 @@ export const StudentManagerModal: React.FC<StudentManagerModalProps> = ({ isOpen
     setNewName('');
     setNewNumber('');
     showToast(`${newName} 학생을 등록했습니다.`, 'success');
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = students.findIndex((s) => s.id === active.id);
+      const newIndex = students.findIndex((s) => s.id === over.id);
+
+      const newOrder = arrayMove(students, oldIndex, newIndex);
+      manageStudents(newOrder);
+      showToast('학생 순서를 변경했습니다.', 'info');
+    }
   };
 
   const startEdit = (student: Student) => {
@@ -113,55 +257,33 @@ export const StudentManagerModal: React.FC<StudentManagerModalProps> = ({ isOpen
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">학생 명단 ({students.length}명)</h4>
             <div className="divide-y divide-gray-50 border border-gray-100 rounded-xl overflow-hidden bg-white">
-              {students.map((student) => (
-                <div key={student.id} className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors">
-                  {editingId === student.id ? (
-                    <div className="flex gap-2 w-full items-center animate-in fade-in slide-in-from-left-2 duration-200">
-                      <input
-                        type="number"
-                        value={editNumber}
-                        onChange={(e) => setEditNumber(e.target.value)}
-                        className="w-12 p-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 p-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                      <button onClick={saveEdit} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors">
-                        <Save size={18} />
-                      </button>
-                      <button onClick={() => setEditingId(null)} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-lg transition-colors">
-                        <X size={18} />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-4">
-                        <span className="font-bold text-blue-500/50 w-6 text-center text-sm">{student.number}</span>
-                        <span className="font-semibold text-gray-700">{student.name}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        <button 
-                          onClick={() => startEdit(student)} 
-                          className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-all"
-                          title="수정"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button 
-                          onClick={() => confirmDelete(student.id)} 
-                          className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-all"
-                          title="삭제"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={students.map((s) => s.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {students.map((student) => (
+                    <SortableStudentItem
+                      key={student.id}
+                      student={student}
+                      editingId={editingId}
+                      editNumber={editNumber}
+                      setEditNumber={setEditNumber}
+                      editName={editName}
+                      setEditName={setEditName}
+                      saveEdit={saveEdit}
+                      setEditingId={setEditingId}
+                      startEdit={startEdit}
+                      confirmDelete={confirmDelete}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+              
               {students.length === 0 && (
                 <div className="py-12 flex flex-col items-center justify-center text-gray-400 space-y-2">
                   <UserX size={32} className="opacity-20" />
@@ -169,6 +291,9 @@ export const StudentManagerModal: React.FC<StudentManagerModalProps> = ({ isOpen
                 </div>
               )}
             </div>
+            <p className="text-[10px] text-gray-400 px-1 italic">
+              * 왼쪽의 아이콘을 드래그하여 순서를 변경할 수 있습니다. 신규 등록/수정 시에는 번호순으로 자동 정렬됩니다.
+            </p>
           </div>
         </div>
       </Modal>

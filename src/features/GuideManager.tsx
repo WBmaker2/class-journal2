@@ -95,6 +95,12 @@ export const GuideManager: React.FC = () => {
 
   const updateLogs = [
     {
+      version: "v3.9.11",
+      date: "2026.03.21",
+      title: "학생 명단 자유 정렬(Drag & Drop) 기능 추가",
+      content: "학생 관리 페이지에서 학생들의 순서를 드래그하여 자유롭게 변경할 수 있는 기능을 추가했습니다. 기본적으로 번호순으로 정렬되지만, 필요에 따라 원하는 순서로 배치할 수 있습니다."
+    },
+    {
       version: "v3.9.10",
       date: "2026.03.20",
       title: "데이터 엔진 교체 및 아키텍처 리팩토링",
