@@ -34,6 +34,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const isDownloadingRef = useRef(false);
   const isCheckingVersionRef = useRef(false);
+  const hasCheckedInitialRef = useRef(false);
 
   const [showConflict, setShowConflict] = useState(false);
   const [remoteTimeStr, setRemoteTimeStr] = useState<string | null>(null);
@@ -200,10 +201,11 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isDirty, isSyncing, user, securityKey, showConflict, uploadData]);
 
   useEffect(() => {
-    if (user && securityKey && !lastSync) {
+    if (user && securityKey && !hasCheckedInitialRef.current) {
+      hasCheckedInitialRef.current = true;
       checkRemoteVersion(true);
     }
-  }, [user, securityKey, lastSync, checkRemoteVersion]);
+  }, [user, securityKey, checkRemoteVersion]);
 
   useEffect(() => {
     if (!isLoggedIn || !securityKey || !user) return;
