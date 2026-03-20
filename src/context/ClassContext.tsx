@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { localStorageService } from '../services/localStorage';
+import { db, migrateFromLocalStorage } from '../services/db';
 import { useSync } from './SyncContext';
+import { useToast } from './ToastContext';
 import type { Class, Timetable, TimetableTemplate, Subject } from '../types';
+
+const DEFAULT_SUBJECTS = ['국어', '수학', '사회', '과학', '도덕', '영어', '음악', '미술', '체육', '창체'];
 
 interface ClassContextType {
   classes: Class[];
@@ -32,26 +35,48 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [templates, setTemplates] = useState<TimetableTemplate[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const { markAsDirty } = useSync();
+  const { showToast } = useToast();
 
-  const loadAllData = () => {
-    const allData = localStorageService.getAllData();
-    setClasses(allData.classes);
-    setTemplates(allData.templates || []);
-    setSubjects(allData.subjects || []);
-    const savedActiveClassId = allData.activeClassId;
-    if (savedActiveClassId) {
-      setActiveClassIdState(savedActiveClassId);
-    } else if (allData.classes.length > 0) {
-      setActiveClassIdState(allData.classes[0].id);
+  const loadAllData = async () => {
+    try {
+      await migrateFromLocalStorage();
+
+      const loadedClasses = await db.classes.toArray();
+      loadedClasses.sort((a, b) => a.order - b.order);
+      setClasses(loadedClasses);
+
+      const loadedTemplatesMeta = await db.metadata.get('templates');
+      setTemplates(loadedTemplatesMeta?.value || []);
+
+      let loadedSubjectsMeta = await db.metadata.get('subjects');
+      if (!loadedSubjectsMeta?.value || loadedSubjectsMeta.value.length === 0) {
+        const defaultSubjects = DEFAULT_SUBJECTS.map((name, index) => ({
+          id: `subject-${index}`,
+          name,
+          order: index
+        }));
+        await db.metadata.put({ key: 'subjects', value: defaultSubjects });
+        loadedSubjectsMeta = { key: 'subjects', value: defaultSubjects };
+      }
+      setSubjects(loadedSubjectsMeta.value);
+
+      const savedActiveClassIdMeta = await db.metadata.get('activeClassId');
+      if (savedActiveClassIdMeta?.value) {
+        setActiveClassIdState(savedActiveClassIdMeta.value);
+      } else if (loadedClasses.length > 0) {
+        setActiveClassIdState(loadedClasses[0].id);
+      }
+    } catch (e) {
+      console.error('Failed to load data from IndexedDB:', e);
+      showToast('데이터를 불러오는데 실패했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    localStorageService.runMigration();
     loadAllData();
-    setIsLoading(false);
 
-    // Sync state when localStorage changes in other contexts (e.g. after cloud restore)
     const handleStorageChange = () => {
       loadAllData();
     };
@@ -60,13 +85,17 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const setActiveClassId = (id: string | null) => {
+  const setActiveClassId = async (id: string | null) => {
     setActiveClassIdState(id);
-    localStorageService.saveActiveClassId(id);
+    if (id) {
+      await db.metadata.put({ key: 'activeClassId', value: id });
+    } else {
+      await db.metadata.delete('activeClassId');
+    }
     markAsDirty();
   };
 
-  const addClass = (name: string) => {
+  const addClass = async (name: string) => {
     const newClass: Class = {
       id: self.crypto.randomUUID(),
       name,
@@ -74,25 +103,35 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     const updatedClasses = [...classes, newClass];
     setClasses(updatedClasses);
-    localStorageService.saveClasses(updatedClasses);
+    
+    await db.classes.put(newClass);
     if (!activeClassId) {
         setActiveClassId(newClass.id);
     }
     markAsDirty();
   };
 
-  const updateClass = (id: string, name: string) => {
+  const updateClass = async (id: string, name: string) => {
     const updatedClasses = classes.map(c => c.id === id ? { ...c, name } : c);
     setClasses(updatedClasses);
-    localStorageService.saveClasses(updatedClasses);
+    
+    const classToUpdate = updatedClasses.find(c => c.id === id);
+    if (classToUpdate) {
+      await db.classes.put(classToUpdate);
+    }
     markAsDirty();
   };
 
-  const deleteClass = (id: string) => {
+  const deleteClass = async (id: string) => {
     const updatedClasses = classes.filter(c => c.id !== id);
     setClasses(updatedClasses);
-    localStorageService.saveClasses(updatedClasses);
-    localStorageService.deleteClassData(id);
+    
+    await db.transaction('rw', db.classes, db.students, db.records, db.todos, async () => {
+      await db.classes.delete(id);
+      await db.students.where('classId').equals(id).delete();
+      await db.records.where('classId').equals(id).delete();
+      await db.todos.where('classId').equals(id).delete();
+    });
 
     if (activeClassId === id) {
         const newActiveClassId = updatedClasses.length > 0 ? updatedClasses[0].id : null;
@@ -101,14 +140,14 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     markAsDirty();
   };
 
-  const reorderClasses = (newlyOrderedClasses: Class[]) => {
+  const reorderClasses = async (newlyOrderedClasses: Class[]) => {
     const updatedClasses = newlyOrderedClasses.map((c, index) => ({ ...c, order: index }));
     setClasses(updatedClasses);
-    localStorageService.saveClasses(updatedClasses);
+    await db.classes.bulkPut(updatedClasses);
     markAsDirty();
   };
 
-  const saveTemplate = (name: string, data: Timetable) => {
+  const saveTemplate = async (name: string, data: Timetable) => {
     const newTemplate: TimetableTemplate = {
       id: self.crypto.randomUUID(),
       name,
@@ -116,25 +155,28 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
-    localStorageService.saveTemplates(updatedTemplates);
+    await db.metadata.put({ key: 'templates', value: updatedTemplates });
     markAsDirty();
   };
 
-  const deleteTemplate = (id: string) => {
+  const deleteTemplate = async (id: string) => {
     const updatedTemplates = templates.filter(t => t.id !== id);
     setTemplates(updatedTemplates);
-    localStorageService.saveTemplates(updatedTemplates);
+    await db.metadata.put({ key: 'templates', value: updatedTemplates });
     markAsDirty();
   };
 
-  const updateTimetable = (classId: string, timetable: Timetable) => {
+  const updateTimetable = async (classId: string, timetable: Timetable) => {
     const updatedClasses = classes.map(c => c.id === classId ? { ...c, timetable } : c);
     setClasses(updatedClasses);
-    localStorageService.updateClassTimetable(classId, timetable);
+    const classToUpdate = updatedClasses.find(c => c.id === classId);
+    if (classToUpdate) {
+      await db.classes.put(classToUpdate);
+    }
     markAsDirty();
   };
 
-  const addSubject = (name: string) => {
+  const addSubject = async (name: string) => {
     const newSubject: Subject = {
       id: self.crypto.randomUUID(),
       name,
@@ -142,28 +184,28 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     const updatedSubjects = [...subjects, newSubject];
     setSubjects(updatedSubjects);
-    localStorageService.saveSubjects(updatedSubjects);
+    await db.metadata.put({ key: 'subjects', value: updatedSubjects });
     markAsDirty();
   };
 
-  const updateSubject = (id: string, name: string) => {
+  const updateSubject = async (id: string, name: string) => {
     const updatedSubjects = subjects.map(s => s.id === id ? { ...s, name } : s);
     setSubjects(updatedSubjects);
-    localStorageService.saveSubjects(updatedSubjects);
+    await db.metadata.put({ key: 'subjects', value: updatedSubjects });
     markAsDirty();
   };
 
-  const deleteSubject = (id: string) => {
+  const deleteSubject = async (id: string) => {
     const updatedSubjects = subjects.filter(s => s.id !== id);
     setSubjects(updatedSubjects);
-    localStorageService.saveSubjects(updatedSubjects);
+    await db.metadata.put({ key: 'subjects', value: updatedSubjects });
     markAsDirty();
   };
 
-  const reorderSubjects = (newlyOrderedSubjects: Subject[]) => {
+  const reorderSubjects = async (newlyOrderedSubjects: Subject[]) => {
     const updatedSubjects = newlyOrderedSubjects.map((s, index) => ({ ...s, order: index }));
     setSubjects(updatedSubjects);
-    localStorageService.saveSubjects(updatedSubjects);
+    await db.metadata.put({ key: 'subjects', value: updatedSubjects });
     markAsDirty();
   };
 
