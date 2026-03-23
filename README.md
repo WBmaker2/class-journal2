@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Class Journal 2
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Class Journal 2 is a React + TypeScript + Vite web app for teacher class-journal workflows. The repo already documents work around multi-class management, cloud sync, realtime conflict handling, encryption, export warnings, timetable management, and responsive layouts.
 
-Currently, two official plugins are available:
+## What lives here
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `src/`: application code and UI behavior.
+- `docs/01-plan` -> `docs/04-report`: PDCA trail for feature work.
+- `.pdca-status.json`: root project/session status snapshot.
+- `docs/.pdca-status.json`: documentation pipeline snapshot.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- TypeScript
+- Vite
+- Supabase
+- Dexie / IndexedDB
+- Tailwind CSS 4
+- DnD Kit
+- date-fns, Recharts, jspdf, xlsx, html2canvas, crypto-js
 
-## Expanding the ESLint configuration
+## Run Locally
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Repository Conventions
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Keep implementation changes in `src/`.
+- Update the PDCA trail when a feature moves through plan, design, analysis, and report.
+- Keep README and status files conservative; do not claim a feature is complete unless the docs or commits support it.
+- Release and version metadata can lag briefly between `package.json`, git tags, and documentation snapshots; verify before publishing.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Current Documented Feature Areas
+
+- Multi-class support and PDF export stabilization
+- Realtime sync and conflict resolution
+- End-to-end encryption and checksum validation
+- Mobile responsive and landscape-optimized layouts
+- Privacy warnings for PDF/Excel export
+- Custom timetable templates
+
+## Maintainer Notes
+
+- Recent git history shows release work through `v3.9.11`.
+- The report files under `docs/04-report/` are the most reliable completion record for finished features.
+- This README is intentionally maintainer-facing; user-facing product docs should stay in the app or the PDCA trail.
+
+## Real-Server Manual Verification
+
+Use this checklist when validating sync prompts against the real Supabase backend:
+
+1. In device A, sign in, change class data, and run a cloud backup.
+2. In device B or an incognito window, make sure some local data already exists before signing in.
+3. Sign in on device B with the same account and enter the security key.
+4. Confirm that the app shows the server-update prompt instead of silently auto-restoring.
+5. Choose `데이터 병합 (권장)` and verify that both existing local data and newer server data remain available.
+6. Repeat once with true local unsaved edits to confirm the conflict-mode prompt still appears.

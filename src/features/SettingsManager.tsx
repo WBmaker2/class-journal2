@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { LogIn, LogOut, CloudUpload, RefreshCw, FileDown, FileUp, ShieldCheck, CheckCircle2, Lock, Key } from 'lucide-react';
+import { LogIn, LogOut, CloudUpload, RefreshCw, FileDown, FileUp, ShieldCheck, CheckCircle2, Lock, Key, Bug } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { ClassManager } from './ClassManager';
 import { SubjectManager } from './SubjectManager';
@@ -15,7 +15,8 @@ export const SettingsManager: React.FC = () => {
   const { showToast } = useToast();
   const { user, isLoggedIn, signIn, signOut } = useAuth();
   const { securityKey, setSecurityKey } = useSecurity();
-  const { isSyncing, lastSync, uploadData, downloadData } = useSync();
+  const { isSyncing, lastSync, uploadData, downloadData, openSyncPreview } = useSync();
+  const isDev = import.meta.env.DEV;
 
   const handleResetSecurityKey = () => {
     if (confirm('현재 세션의 보안 비밀번호를 초기화하시겠습니까? (서버 데이터는 삭제되지 않으며, 다시 입력해야 합니다.)')) {
@@ -210,6 +211,38 @@ export const SettingsManager: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {isDev && (
+        <Card>
+          <CardHeader
+            title="개발용 동기화 점검"
+            subtitle="실제 서버나 로컬 데이터를 변경하지 않고 동기화 모달을 미리 볼 수 있습니다."
+          />
+          <CardContent className="p-3 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <Button
+                variant="outline"
+                onClick={() => void openSyncPreview('server-update')}
+                className="flex items-center justify-center gap-2 h-10 md:h-11 text-sm md:text-base border-blue-200 text-blue-700 hover:bg-blue-50"
+              >
+                <Bug size={18} />
+                서버 최신 모달 미리보기
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => void openSyncPreview('conflict')}
+                className="flex items-center justify-center gap-2 h-10 md:h-11 text-sm md:text-base border-amber-200 text-amber-700 hover:bg-amber-50"
+              >
+                <Bug size={18} />
+                충돌 모달 미리보기
+              </Button>
+            </div>
+            <p className="text-[10px] md:text-xs text-gray-400 mt-3">
+              개발 서버에서만 표시됩니다. 미리보기 버튼은 실제 백업, 복구, 병합을 수행하지 않습니다.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <ClassManager />
       <SubjectManager />

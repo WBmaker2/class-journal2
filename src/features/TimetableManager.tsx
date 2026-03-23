@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Save, Copy, Trash2, Plus, Minus } from 'lucide-react';
 import type { Timetable } from '../types';
+import { sortByOrder } from '../utils/sorting';
 
 const DAYS = ['월', '화', '수', '목', '금'];
 
@@ -119,7 +120,7 @@ export const TimetableManager: React.FC = () => {
                           className="w-full p-1 lg:p-2 text-[10px] md:text-sm lg:text-base border-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-transparent appearance-none text-center font-medium"
                         >
                           <option value="">-</option>
-                          {subjects.sort((a,b) => a.order - b.order).map(s => (
+                          {sortByOrder(subjects).map(s => (
                             <option key={s.id} value={s.name}>{s.name}</option>
                           ))}
                         </select>

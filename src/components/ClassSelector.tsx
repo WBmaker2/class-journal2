@@ -1,5 +1,6 @@
 import React from 'react';
 import { useClass } from '../context/ClassContext';
+import { sortByOrder } from '../utils/sorting';
 
 export const ClassSelector: React.FC = () => {
   const { classes, activeClassId, setActiveClassId, isLoading } = useClass();
@@ -25,7 +26,7 @@ export const ClassSelector: React.FC = () => {
         disabled={classes.length === 0}
       >
         {classes.length === 0 && <option>학급을 추가해주세요</option>}
-        {classes.sort((a,b) => a.order - b.order).map(c => (
+        {sortByOrder(classes).map(c => (
           <option key={c.id} value={c.id}>
             {c.name}
           </option>

@@ -8,7 +8,8 @@ import { Modal } from '../components/ui/Modal';
 import { PrivacyWarningModal } from '../components/ui/PrivacyWarningModal';
 import { usePDFExport } from '../hooks/usePDFExport';
 import { useExcelExport } from '../hooks/useExcelExport';
-import type { DailyRecord } from '../types';
+import { createDefaultDailyRecord } from '../services/dailyRecord';
+import { sortByDate } from '../utils/sorting';
 
 export const ClassLogEditor: React.FC = () => {
   const { currentDate, records, saveCurrentRecord, students } = useJournal();
@@ -43,25 +44,15 @@ export const ClassLogEditor: React.FC = () => {
   }, [exportMode, currentDate]);
 
   const handleSave = () => {
-    const newRecord: DailyRecord = currentRecord ? {
+    const newRecord = currentRecord ? {
       ...currentRecord,
       classLog: log
-    } : {
-      date: currentDate,
-      weather: 'Sunny',
-      atmosphere: 'Calm',
-      attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
-      lessonLogs: [],
-      classLog: log,
-      studentNotes: {},
-    };
+    } : createDefaultDailyRecord(currentDate, students, { classLog: log });
     saveCurrentRecord(newRecord);
   };
 
   const getSortedRecords = () => {
-    return records
-      .filter(r => r.date >= startDate && r.date <= endDate && r.classLog.trim() !== '')
-      .sort((a, b) => a.date.localeCompare(b.date));
+    return sortByDate(records.filter(r => r.date >= startDate && r.date <= endDate && r.classLog.trim() !== ''));
   };
 
   const handleExcelExport = () => {

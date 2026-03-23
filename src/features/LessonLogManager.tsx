@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useJournal } from '../context/JournalContext';
 import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
-import type { DailyRecord, LessonLog } from '../types';
+import type { LessonLog } from '../types';
+import { createDefaultDailyRecord } from '../services/dailyRecord';
+import { sortByOrder } from '../utils/sorting';
 
 export const LessonLogManager: React.FC = () => {
   const { currentDate, records, saveCurrentRecord, students } = useJournal();
@@ -43,18 +45,10 @@ export const LessonLogManager: React.FC = () => {
     setLessonLogs(newLogs);
     
     const existing = records.find(r => r.date === currentDate);
-    const newRecord: DailyRecord = existing ? {
+    const newRecord = existing ? {
       ...existing,
       lessonLogs: newLogs
-    } : {
-      date: currentDate,
-      weather: 'Sunny',
-      atmosphere: 'Calm',
-      attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
-      lessonLogs: newLogs,
-      classLog: '',
-      studentNotes: {},
-    };
+    } : createDefaultDailyRecord(currentDate, students, { lessonLogs: newLogs });
     saveCurrentRecord(newRecord);
   };
 
@@ -73,7 +67,7 @@ export const LessonLogManager: React.FC = () => {
                   className="text-xs md:text-sm border-gray-200 rounded-md p-1 bg-white outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">과목 선택</option>
-                  {subjects.sort((a,b) => a.order - b.order).map(s => (
+                  {sortByOrder(subjects).map(s => (
                     <option key={s.id} value={s.name}>{s.name}</option>
                   ))}
                 </select>

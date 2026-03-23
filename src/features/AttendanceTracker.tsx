@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { UserPlus } from 'lucide-react';
 import { StudentManagerModal } from './StudentManagerModal';
+import { createDefaultDailyRecord, mergeAttendanceWithStudents } from '../services/dailyRecord';
 
 const WEATHER_OPTIONS: { value: Weather; emoji: string; label: string }[] = [
   { value: 'Sunny', emoji: '☀️', label: '맑음' },
@@ -42,16 +43,9 @@ export const AttendanceTracker: React.FC = () => {
   useEffect(() => {
     const existing = records.find(r => r.date === currentDate);
     if (existing) {
-      // Check if any current students are missing from the record
-      const existingStudentIds = new Set(existing.attendance.map(a => a.studentId));
-      const missingStudents = students.filter(s => !existingStudentIds.has(s.id));
+      const newAttendance = mergeAttendanceWithStudents(existing.attendance, students);
 
-      if (missingStudents.length > 0) {
-        // Add missing students with default 'Present' status
-        const newAttendance = [
-          ...existing.attendance,
-          ...missingStudents.map(s => ({ studentId: s.id, status: 'Present' as AttendanceStatus }))
-        ];
+      if (newAttendance.length > existing.attendance.length) {
         const updatedRecord = { ...existing, attendance: newAttendance };
         setRecord(updatedRecord);
         saveCurrentRecord(updatedRecord); // Sync to storage/context immediately
@@ -59,15 +53,7 @@ export const AttendanceTracker: React.FC = () => {
         setRecord(existing);
       }
     } else {
-      setRecord({
-        date: currentDate,
-        weather: 'Sunny',
-        atmosphere: 'Calm',
-        attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
-        lessonLogs: [],
-        classLog: '',
-        studentNotes: {},
-      });
+      setRecord(createDefaultDailyRecord(currentDate, students));
     }
   }, [currentDate, records, students, saveCurrentRecord]);
 

@@ -1,4 +1,9 @@
-import type { DailyRecord, Student, TodoItem, Class, TimetableTemplate, Subject } from '../types';
+import type { DailyRecord, Student, TodoItem, Class, Timetable, TimetableTemplate, Subject } from '../types';
+import {
+  mergeAppData as mergeStoredAppData,
+  type AppDataSnapshot,
+  type ClassData,
+} from './appDataMerge';
 
 const V1_KEYS = {
   RECORDS: 'cj_daily_records',
@@ -10,21 +15,7 @@ const V2_KEY = 'cj_data';
 
 const DEFAULT_SUBJECTS = ['국어', '수학', '사회', '과학', '도덕', '영어', '음악', '미술', '체육', '창체'];
 
-interface ClassData {
-  students: Student[];
-  records: DailyRecord[];
-  todos: TodoItem[];
-}
-
-interface AppData {
-  classes: Class[];
-  activeClassId: string | null;
-  classData: Record<string, ClassData>;
-  templates?: TimetableTemplate[];
-  subjects?: Subject[];
-}
-
-const getInitialData = (): AppData => ({
+const getInitialData = (): AppDataSnapshot => ({
   classes: [],
   activeClassId: null,
   classData: {},
@@ -48,7 +39,7 @@ export const localStorageService = {
       const students = v1Students ? JSON.parse(v1Students) : [];
       const todos = localStorage.getItem(V1_KEYS.TODOS) ? JSON.parse(localStorage.getItem(V1_KEYS.TODOS)!) : [];
 
-      const newData: AppData = {
+      const newData: AppDataSnapshot = {
         classes: [defaultClass],
         activeClassId: defaultClass.id,
         classData: {
@@ -72,11 +63,11 @@ export const localStorageService = {
     }
   },
   
-  getAllData: (): AppData => {
+  getAllData: (): AppDataSnapshot => {
     const dataStr = localStorage.getItem(V2_KEY);
     if (!dataStr) return getInitialData();
     
-    const data: AppData = JSON.parse(dataStr);
+    const data: AppDataSnapshot = JSON.parse(dataStr);
     
     // Ensure subjects are initialized even for existing v2 data
     if (!data.subjects || data.subjects.length === 0) {
@@ -91,7 +82,7 @@ export const localStorageService = {
     return data;
   },
 
-  saveAllData: (data: AppData) => {
+  saveAllData: (data: AppDataSnapshot) => {
     localStorage.setItem(V2_KEY, JSON.stringify(data));
   },
   
@@ -200,7 +191,7 @@ export const localStorageService = {
     return data.subjects || [];
   },
 
-  updateClassTimetable: (classId: string, timetable: any) => {
+  updateClassTimetable: (classId: string, timetable: Timetable) => {
     const data = localStorageService.getAllData();
     const classIdx = data.classes.findIndex(c => c.id === classId);
     if (classIdx > -1) {
@@ -209,88 +200,7 @@ export const localStorageService = {
     }
   },
 
-  mergeAppData: (local: AppData, remote: AppData): AppData => {
-    const merged: AppData = { ...local };
-
-    // 1. Classes Merge
-    const localClassIds = new Set(local.classes.map(c => c.id));
-    remote.classes.forEach(rc => {
-      if (!localClassIds.has(rc.id)) {
-        merged.classes.push(rc);
-      }
-    });
-
-    // 2. ClassData Merge
-    const allClassIds = new Set([
-      ...Object.keys(local.classData),
-      ...Object.keys(remote.classData)
-    ]);
-
-    allClassIds.forEach(classId => {
-      const localCd = local.classData[classId];
-      const remoteCd = remote.classData[classId];
-
-      if (!localCd) {
-        merged.classData[classId] = remoteCd;
-        return;
-      }
-      if (!remoteCd) return;
-
-      // Merge Students
-      const localStudentIds = new Set(localCd.students.map(s => s.id));
-      const mergedStudents = [...localCd.students];
-      remoteCd.students.forEach(rs => {
-        if (!localStudentIds.has(rs.id)) {
-          mergedStudents.push(rs);
-        }
-      });
-
-      // Merge Todos
-      const localTodoIds = new Set(localCd.todos.map(t => t.id));
-      const mergedTodos = [...localCd.todos];
-      remoteCd.todos.forEach(rt => {
-        if (!localTodoIds.has(rt.id)) {
-          mergedTodos.push(rt);
-        }
-      });
-
-      // Merge Records (Crucial)
-      const mergedRecords = [...localCd.records];
-      remoteCd.records.forEach(rr => {
-        const idx = mergedRecords.findIndex(r => r.date === rr.date);
-        if (idx === -1) {
-          mergedRecords.push(rr);
-        } else {
-          // Conflict: Same date.
-          // Heuristic: Keep the one with longer classLog or more studentNotes
-          const localR = mergedRecords[idx];
-          const localWeight = (localR.classLog?.length || 0) + Object.keys(localR.studentNotes || {}).length * 10;
-          const remoteWeight = (rr.classLog?.length || 0) + Object.keys(rr.studentNotes || {}).length * 10;
-          
-          if (remoteWeight > localWeight) {
-            mergedRecords[idx] = rr;
-          }
-        }
-      });
-
-      merged.classData[classId] = {
-        students: mergedStudents,
-        records: mergedRecords,
-        todos: mergedTodos
-      };
-    });
-
-    // 3. Templates Merge
-    const localTemplateIds = new Set((local.templates || []).map(t => t.id));
-    if (remote.templates) {
-      remote.templates.forEach(rt => {
-        if (!localTemplateIds.has(rt.id)) {
-          if (!merged.templates) merged.templates = [];
-          merged.templates.push(rt);
-        }
-      });
-    }
-
-    return merged;
-  }
+  mergeAppData: (local: AppDataSnapshot, remote: AppDataSnapshot): AppDataSnapshot => {
+    return mergeStoredAppData(local, remote);
+  },
 };

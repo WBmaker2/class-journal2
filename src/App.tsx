@@ -1,4 +1,4 @@
-// Version: v3.7.6
+// Version: v3.9.11
 import { useState } from 'react'
 import { LayoutDashboard, ClipboardCheck, BookOpen, Clock, Settings, Calendar, Users, Info } from 'lucide-react'
 import { AttendanceTracker } from './features/AttendanceTracker'

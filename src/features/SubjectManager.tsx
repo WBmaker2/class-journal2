@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { PlusCircle, Trash, Edit, Save, GripVertical } from 'lucide-react';
 import type { Subject } from '../types';
+import { sortByOrder } from '../utils/sorting';
 
 export const SubjectManager: React.FC = () => {
   const { subjects, addSubject, updateSubject, deleteSubject, reorderSubjects } = useClass();
@@ -75,7 +76,7 @@ export const SubjectManager: React.FC = () => {
 
         {/* Subject List */}
         <div className="space-y-2">
-          {subjects.sort((a,b) => a.order - b.order).map(subject => (
+          {sortByOrder(subjects).map(subject => (
             <div
               key={subject.id}
               draggable

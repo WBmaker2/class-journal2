@@ -1,8 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, supabaseService } from '../services/supabase';
-import { localStorageService } from '../services/localStorage';
 import { exportDatabase, importDatabase } from '../services/db';
-import { encryptionService } from '../services/encryption';
+import { mergeAppData, type AppDataSnapshot } from '../services/appDataMerge';
+import {
+  getRemoteSyncResolution,
+  hasMeaningfulLocalData,
+  type RemoteSyncResolution,
+} from '../services/syncDecision';
+import {
+  createEncryptedCloudPayload,
+  decryptCloudPayload,
+  isEncryptedCloudPayload,
+  type EncryptedCloudPayload,
+} from '../services/syncPayload';
+import { createSyncPreviewState, type SyncPreviewMode } from '../services/syncPreview';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
 import { useSecurity } from './SecurityContext';
@@ -15,12 +26,15 @@ interface SyncContextType {
   uploadData: (isAuto?: boolean, force?: boolean) => Promise<void>;
   downloadData: (isAuto?: boolean) => Promise<void>;
   markAsDirty: () => void;
+  openSyncPreview: (mode: SyncPreviewMode) => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined);
 
 const AUTO_BACKUP_DELAY = 5000;
 const VERSION_CHECK_INTERVAL = 120000;
+type CloudSyncData = EncryptedCloudPayload | AppDataSnapshot;
+type SyncPromptMode = 'conflict' | 'server-update';
 
 export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoggedIn } = useAuth();
@@ -37,8 +51,29 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hasCheckedInitialRef = useRef(false);
 
   const [showConflict, setShowConflict] = useState(false);
+  const [syncPromptMode, setSyncPromptMode] = useState<SyncPromptMode>('conflict');
+  const [isPreviewPrompt, setIsPreviewPrompt] = useState(false);
   const [remoteTimeStr, setRemoteTimeStr] = useState<string | null>(null);
-  const [pendingRemoteData, setPendingRemoteData] = useState<any>(null);
+  const [pendingRemoteData, setPendingRemoteData] = useState<CloudSyncData | null>(null);
+
+  const openSyncPrompt = useCallback((mode: SyncPromptMode, remoteData: CloudSyncData, updatedAt: string) => {
+    setSyncPromptMode(mode);
+    setIsPreviewPrompt(false);
+    setRemoteTimeStr(new Date(updatedAt).toLocaleString());
+    setPendingRemoteData(remoteData);
+    setShowConflict(true);
+  }, []);
+
+  const openSyncPreview = useCallback(async (mode: SyncPreviewMode) => {
+    const localData = await exportDatabase() as AppDataSnapshot;
+    const preview = createSyncPreviewState(mode, lastSync);
+
+    setSyncPromptMode(mode);
+    setIsPreviewPrompt(true);
+    setRemoteTimeStr(new Date(preview.remoteTime).toLocaleString());
+    setPendingRemoteData(localData);
+    setShowConflict(true);
+  }, [lastSync]);
 
   const markAsDirty = useCallback(() => {
     if (isLoggedIn && securityKey) {
@@ -55,9 +90,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (cloudResult) {
           const remoteTime = new Date(cloudResult.updated_at).getTime();
           if (remoteTime > lastSyncTimeRef.current + 2000) {
-            setRemoteTimeStr(new Date(cloudResult.updated_at).toLocaleString());
-            setPendingRemoteData(cloudResult.data);
-            setShowConflict(true);
+            openSyncPrompt('conflict', cloudResult.data as CloudSyncData, cloudResult.updated_at);
             setIsDirty(true);
             if (isAuto) {
               console.warn('Auto-backup aborted due to conflict');
@@ -75,15 +108,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsSyncing(true);
     try {
       const localData = await exportDatabase();
-      const encryptedPayload = encryptionService.encrypt(localData, securityKey);
-      const checksum = encryptionService.generateChecksum(localData);
-      
-      const encryptedForCloud = {
-          isEncrypted: true,
-          payload: encryptedPayload,
-          checksum: checksum,
-          updatedAt: new Date().toISOString()
-      };
+      const encryptedForCloud = createEncryptedCloudPayload(localData, securityKey);
       const result = await supabaseService.upsertUserData(user.id, encryptedForCloud);
       const serverTime = new Date(result.updated_at);
       
@@ -94,7 +119,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isAuto) {
         showToast('로컬 데이터를 암호화하여 클라우드에 백업했습니다.', 'success');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Upload error:', error);
       if (!isAuto) {
         showToast('백업 중 오류가 발생했습니다.', 'error');
@@ -102,7 +127,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsSyncing(false);
     }
-  }, [user, securityKey, showToast]);
+  }, [user, securityKey, showToast, openSyncPrompt]);
 
   const downloadData = useCallback(async (isAuto = false) => {
     if (!user || !securityKey || isDownloadingRef.current) return;
@@ -116,19 +141,10 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
       }
 
-      const encryptedData = cloudResult.data;
-      if (encryptedData.isEncrypted) {
+      const remoteData = cloudResult.data as CloudSyncData;
+      if (isEncryptedCloudPayload(remoteData)) {
           try {
-              const decrypted = encryptionService.decrypt(encryptedData.payload, securityKey);
-              
-              if (encryptedData.checksum) {
-                  const currentChecksum = encryptionService.generateChecksum(decrypted);
-                  if (currentChecksum !== encryptedData.checksum) {
-                      showToast('데이터 무결성 검증에 실패했습니다. 데이터가 손상되었을 수 있습니다.', 'error');
-                      return;
-                  }
-              }
-
+              const decrypted = decryptCloudPayload<AppDataSnapshot>(remoteData, securityKey);
               await importDatabase(decrypted);
               const remoteTime = new Date(cloudResult.updated_at);
               setLastSync(remoteTime.toLocaleString());
@@ -144,7 +160,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               showToast('보안 비밀번호가 올바르지 않습니다.', 'error');
           }
       } else {
-          localStorageService.saveAllData(encryptedData);
+          await importDatabase(remoteData);
           const remoteTime = new Date(cloudResult.updated_at);
           setLastSync(remoteTime.toLocaleString());
           lastSyncTimeRef.current = remoteTime.getTime();
@@ -170,16 +186,21 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (cloudResult) {
         const remoteTime = new Date(cloudResult.updated_at).getTime();
         const isRemoteNewer = remoteTime > lastSyncTimeRef.current + 2000;
+        const localData = await exportDatabase() as AppDataSnapshot;
+        const resolution: RemoteSyncResolution = getRemoteSyncResolution({
+          isInitial,
+          isDirty,
+          hasLocalData: hasMeaningfulLocalData(localData),
+          isRemoteNewer,
+        });
         
-        if (isRemoteNewer) {
-          if (isDirty) {
-            setRemoteTimeStr(new Date(cloudResult.updated_at).toLocaleString());
-            setPendingRemoteData(cloudResult.data);
-            setShowConflict(true);
-          } else {
-            await downloadData(true);
-          }
-        } else if (isInitial === true && !lastSyncTimeRef.current) {
+        if (resolution === 'prompt-conflict') {
+          openSyncPrompt('conflict', cloudResult.data as CloudSyncData, cloudResult.updated_at);
+        } else if (resolution === 'prompt-server-update') {
+          openSyncPrompt('server-update', cloudResult.data as CloudSyncData, cloudResult.updated_at);
+        } else if (resolution === 'download') {
+          await downloadData(true);
+        } else if (isInitial === true && !lastSyncTimeRef.current && !hasMeaningfulLocalData(localData)) {
           await downloadData(true);
         }
       }
@@ -188,7 +209,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       isCheckingVersionRef.current = false;
     }
-  }, [user, isSyncing, showConflict, isDirty, downloadData]);
+  }, [user, isSyncing, showConflict, isDirty, downloadData, openSyncPrompt]);
 
   useEffect(() => {
     if (!isDirty || isSyncing || !user || !securityKey || showConflict) return;
@@ -242,23 +263,15 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleMerge = async () => {
     if (!pendingRemoteData || !securityKey) return;
     try {
-      let decryptedRemote;
-      if (pendingRemoteData.isEncrypted) {
-        decryptedRemote = encryptionService.decrypt(pendingRemoteData.payload, securityKey);
-        
-        if (pendingRemoteData.checksum) {
-          const remoteChecksum = encryptionService.generateChecksum(decryptedRemote);
-          if (remoteChecksum !== pendingRemoteData.checksum) {
-            showToast('원격 데이터 무결성 검증에 실패했습니다.', 'error');
-            return;
-          }
-        }
+      let decryptedRemote: AppDataSnapshot;
+      if (isEncryptedCloudPayload(pendingRemoteData)) {
+        decryptedRemote = decryptCloudPayload<AppDataSnapshot>(pendingRemoteData, securityKey);
       } else {
         decryptedRemote = pendingRemoteData;
       }
 
       const localData = await exportDatabase();
-      const mergedData = localStorageService.mergeAppData(localData as any, decryptedRemote);
+      const mergedData = mergeAppData(localData as AppDataSnapshot, decryptedRemote);
       
       await importDatabase(mergedData);
       window.dispatchEvent(new Event('storage')); 
@@ -285,6 +298,13 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await uploadData(false, true);
   };
 
+  const closePreviewPrompt = useCallback(() => {
+    setShowConflict(false);
+    setPendingRemoteData(null);
+    setIsPreviewPrompt(false);
+    showToast('미리보기 모드에서는 데이터가 변경되지 않았습니다.', 'info');
+  }, [showToast]);
+
   return (
     <SyncContext.Provider value={{
       isSyncing,
@@ -292,17 +312,19 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lastSync,
       uploadData,
       downloadData,
-      markAsDirty
+      markAsDirty,
+      openSyncPreview
     }}>
       {children}
       <SyncConflictModal 
         isOpen={showConflict}
-        onClose={() => setShowConflict(false)}
+        onClose={isPreviewPrompt ? closePreviewPrompt : () => setShowConflict(false)}
+        mode={syncPromptMode}
         localTime={lastSync}
         remoteTime={remoteTimeStr}
-        onMerge={handleMerge}
-        onOverwriteLocal={handleOverwriteLocal}
-        onForceUpload={handleForceUpload}
+        onMerge={isPreviewPrompt ? closePreviewPrompt : handleMerge}
+        onOverwriteLocal={isPreviewPrompt ? closePreviewPrompt : handleOverwriteLocal}
+        onForceUpload={isPreviewPrompt ? closePreviewPrompt : handleForceUpload}
       />
     </SyncContext.Provider>
   );

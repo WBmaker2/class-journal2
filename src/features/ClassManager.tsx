@@ -3,6 +3,7 @@ import { useClass } from '../context/ClassContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { PlusCircle, Trash, Edit, Save, GripVertical } from 'lucide-react';
+import { sortByOrder } from '../utils/sorting';
 
 export const ClassManager: React.FC = () => {
   const { classes, addClass, updateClass, deleteClass, reorderClasses } = useClass();
@@ -74,7 +75,7 @@ export const ClassManager: React.FC = () => {
 
         {/* Class List */}
         <div className="space-y-2">
-          {classes.sort((a,b) => a.order - b.order).map(classItem => (
+          {sortByOrder(classes).map(classItem => (
             <div
               key={classItem.id}
               draggable

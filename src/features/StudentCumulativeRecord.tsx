@@ -8,7 +8,9 @@ import { Modal } from '../components/ui/Modal';
 import { PrivacyWarningModal } from '../components/ui/PrivacyWarningModal';
 import { usePDFExport } from '../hooks/usePDFExport';
 import { useExcelExport } from '../hooks/useExcelExport';
-import type { DailyRecord, Student } from '../types';
+import type { Student } from '../types';
+import { createDefaultDailyRecord } from '../services/dailyRecord';
+import { sortByDate } from '../utils/sorting';
 
 export const StudentCumulativeRecord: React.FC = () => {
   const { currentDate, students, records, saveCurrentRecord } = useJournal();
@@ -52,25 +54,15 @@ export const StudentCumulativeRecord: React.FC = () => {
 
   const handleSave = () => {
     const existing = records.find(r => r.date === currentDate);
-    const newRecord: DailyRecord = existing ? {
+    const newRecord = existing ? {
       ...existing,
       studentNotes
-    } : {
-      date: currentDate,
-      weather: 'Sunny',
-      atmosphere: 'Calm',
-      attendance: students.map(s => ({ studentId: s.id, status: 'Present' })),
-      lessonLogs: [],
-      classLog: '',
-      studentNotes
-    };
+    } : createDefaultDailyRecord(currentDate, students, { studentNotes });
     saveCurrentRecord(newRecord);
   };
 
   const getStudentSummaries = () => {
-    const filteredRecords = records
-      .filter(r => r.date >= startDate && r.date <= endDate)
-      .sort((a, b) => a.date.localeCompare(b.date));
+    const filteredRecords = sortByDate(records.filter(r => r.date >= startDate && r.date <= endDate));
 
     const summaries: { student: Student; entries: { date: string; note: string }[] }[] = [];
 
@@ -99,7 +91,7 @@ export const StudentCumulativeRecord: React.FC = () => {
     }
 
     // Flatten data for Excel
-    const data: any[] = [];
+    const data: Array<{ 날짜: string; 번호: number; 이름: string; 내용: string }> = [];
     summaries.forEach(summary => {
       summary.entries.forEach(entry => {
         data.push({
